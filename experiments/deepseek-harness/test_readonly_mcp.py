@@ -261,5 +261,62 @@ class StandaloneHarnessMCPTests(unittest.TestCase):
         self.assertTrue(response["result"]["isError"])
 
 
+    def test_contract_schema_extra_manifest_field_rejected(self):
+        self.asset["permission"] = "allow"
+        self.rebuild()
+        with self.assertRaisesRegex(m.Rejected, "Asset contract fields"):
+            m.inspect("take_001")
+
+    def test_bad_declared_h3_revision_rejected(self):
+        self.asset["origin"]["revision"] = "../../untrusted"
+        self.shot["origin"] = self.asset["origin"]
+        self.rebuild()
+        with self.assertRaisesRegex(m.Rejected, "provenance syntax"):
+            m.inspect("take_001")
+
+    def test_bad_declared_native_snapshot_hash_rejected(self):
+        self.shot["native"]["sha256"] = "FAKE_SHA"
+        self.rebuild()
+        with self.assertRaisesRegex(m.Rejected, "declared SHA"):
+            m.inspect("take_001")
+
+    def test_timebase_true_boolean_rejected(self):
+        self.shot["timebase"]["durationFrames"] = True
+        self.rebuild()
+        with self.assertRaisesRegex(m.Rejected, "timebase integer"):
+            m.inspect("take_001")
+
+    def test_timebase_zero_fps_denominator_rejected(self):
+        self.shot["timebase"]["fpsDenominator"] = 0
+        self.rebuild()
+        with self.assertRaisesRegex(m.Rejected, "timebase integer"):
+            m.inspect("take_001")
+
+    def test_timebase_above_fps_bound_rejected(self):
+        self.shot["timebase"]["fpsNumerator"] = 240
+        self.rebuild()
+        with self.assertRaisesRegex(m.Rejected, "timebase outside pilot"):
+            m.inspect("take_001")
+
+    def test_timebase_above_duration_bound_rejected(self):
+        self.shot["timebase"]["durationFrames"] = 1801
+        self.rebuild()
+        with self.assertRaisesRegex(m.Rejected, "timebase outside pilot"):
+            m.inspect("take_001")
+
+    def test_forged_receiver_approval_field_rejected(self):
+        self.shot["handoff"]["receiverAuthorized"] = True
+        self.rebuild()
+        with self.assertRaisesRegex(m.Rejected, "handoff contract fields"):
+            m.inspect("take_001")
+
+    def test_extra_media_key_rejected(self):
+        self.asset["media"]["nativeWriteEnabled"] = True
+        self.rebuild()
+        with self.assertRaisesRegex(m.Rejected, "media contract fields"):
+            m.inspect("take_001")
+
+
+
 if __name__ == "__main__":
     unittest.main()
