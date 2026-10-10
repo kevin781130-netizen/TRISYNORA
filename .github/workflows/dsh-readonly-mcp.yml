@@ -48,7 +48,7 @@ jobs:
 # No Vera, H3, or PointFlux worktree is mounted or contacted.
   pinned-harness-web:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -71,5 +71,17 @@ jobs:
         env:
           DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
         run: python -B experiments/deepseek-harness/smoke_agent_loop.py
-# Live model calls and in-browser click automation are intentionally NOT tested.
+      - name: Install pinned Playwright and isolated Chromium
+        run: |
+          mkdir -p "$RUNNER_TEMP/trisynora-browser"
+          npm install --prefix "$RUNNER_TEMP/trisynora-browser" --no-audit --no-fund --ignore-scripts playwright@1.56.1
+          cp experiments/deepseek-harness/browser_chat_e2e.mjs "$RUNNER_TEMP/trisynora-browser/browser_chat_e2e.mjs"
+          "$RUNNER_TEMP/trisynora-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Genuine browser chat invokes Agent MCP and renders real catalog
+        env:
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+          TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
+        run: python -B experiments/deepseek-harness/smoke_browser_chat.py
+# Browser UI and MCP are tested against a disposable loopback-only mock model.
+# No real model API key or native Vera / MiniMax-H3 / PointFlux source checkout.
 
