@@ -27,14 +27,14 @@ def _event(value: dict) -> bytes:
     return f"event: {value['type']}\ndata: {text}\n\n".encode("utf-8")
 
 
-def _messages(seq: int) -> bytes:
+def _messages(seq: int, *, request_tool: bool) -> bytes:
     parts = [
         {"type": "message_start", "message": {
             "id": f"mock-msg-{seq}", "type": "message", "role": "assistant",
             "model": "mock-model", "content": [], "usage": {
                 "input_tokens": 5, "output_tokens": 0}}},
     ]
-    if seq == 1:
+    if request_tool:
         parts.extend([
             {"type": "content_block_start", "index": 0,
              "content_block": {"type": "tool_use", "id": "mock-call-1",
@@ -65,6 +65,7 @@ def _messages(seq: int) -> bytes:
 class Handler(BaseHTTPRequestHandler):
     requests = []
     error = None
+    tool_sent = False
 
     def do_POST(self):
         if self.path not in ("/v1/messages", "/messages"):
@@ -80,7 +81,20 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_error(400)
                 return
             self.__class__.requests.append(body)
-            payload = _messages(len(self.__class__.requests))
+            # DSH can first request a title without any tool declarations.
+            # Never fabricate an MCP invocation during such a preflight
+            # call. Demand a real model request that actually offers our
+            # pinned tool; this preserves strict tool_result assertions.
+            offered = any(
+                t.get("name") == TARGET_TOOL
+                for t in body.get("tools", [])
+                if isinstance(t, dict)
+            )
+            request_tool = offered and not self.__class__.tool_sent
+            if request_tool:
+                self.__class__.tool_sent = True
+            payload = _messages(len(self.__class__.requests),
+                                request_tool=request_tool)
             self.send_response(200)
             self.send_header("content-type", "text/event-stream")
             self.send_header("cache-control", "no-cache")
@@ -130,6 +144,7 @@ def run() -> dict:
         raise RuntimeError("refuse execution outside disposable CI")
     Handler.requests = []
     Handler.error = None
+    Handler.tool_sent = False
     with tempfile.TemporaryDirectory(prefix="trisynora-agent-mock-", dir=scratch) as tmp:
         root = Path(tmp)
         for folder in ("work", "home", "dsh-home", "exchange"):
@@ -185,8 +200,10 @@ def run() -> dict:
                                              for k in ("iserror", "unknown tool", "not found", "not authorized"))}
                     for request in Handler.requests[:5]
                 ],
-                "modelRequestedMcpTool": bool(Handler.requests) and
-                    TARGET_TOOL in json.dumps(Handler.requests[0].get("tools", [])),
+                "modelRequestedMcpTool": any(
+                    TARGET_TOOL in json.dumps(req.get("tools", []))
+                    for req in Handler.requests
+                ),
                 "toolResultObservedInLaterModelRequest": _tool_result_received(Handler.requests),
                 "mockProviderError": Handler.error,
                 "nativeProductsConnected": False,
