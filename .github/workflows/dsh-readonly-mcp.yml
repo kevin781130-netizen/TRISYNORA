@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Fail closed on owner-of-truth, duplicate Jobs and native-control expansion
+        run: python -B experiments/deepseek-harness/ownership_gate.py
       - name: Standalone MCP protocol and non-contamination tests
         run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_*.py" -v
       - uses: actions/setup-node@v4
