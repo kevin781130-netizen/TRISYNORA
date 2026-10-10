@@ -1,4 +1,4 @@
-name: TRISYNORA contract and isolation checks
+name: TRISYNORA contract, isolation and real MP4 checks
 on:
   pull_request:
   push:
@@ -15,9 +15,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install schema validation dependency
+      - name: Install schema validator
         run: python -m pip install -r requirements-dev.txt
-      - name: Run local-only conformance and repo boundary tests
+      - name: Install real video probe and decoder for P1 integration tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          command -v ffprobe
+          command -v ffmpeg
+          ffmpeg -hide_banner -encoders | grep -q libx264
+      - name: Run offline contracts and real MP4 decode tests
         run: python -m unittest discover -s tests -v
-# This workflow intentionally has NO write permissions, no external repo checkout,
-# no secret usage, no product runtime install, and no hardware claims.
+# No write permissions, other repo checkouts, secrets or native products.
+# FFmpeg is installed in ephemeral CI only to test synthetic, isolated MP4.
