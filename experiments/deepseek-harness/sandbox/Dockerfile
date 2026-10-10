@@ -9,7 +9,12 @@ RUN apt-get update \
 # Package resolution and native add-on selection happen ONLY at build time.
 # Runtime has no network and this immutable image contains no Git sources.
 RUN mkdir -p /opt/dsh \
-    && npm install --prefix /opt/dsh --no-audit --no-fund --ignore-scripts @deepseek-ai/dsh@0.2.0-rc.2
+    && npm install --prefix /opt/dsh --no-audit --no-fund --ignore-scripts \
+         @deepseek-ai/dsh@0.2.0-rc.2 \
+         node-addon-require-builtin-linux-x64-gnu@0.1.7 \
+    && test -s /opt/dsh/node_modules/node-addon-require-builtin-linux-x64-gnu/prebuilt/linux-x64-gnu-napi-v9.node \
+    && cd /opt/dsh \
+    && node -e "const a = require('node-addon-require-builtin'); if (typeof a.requireBuiltin !== 'function') process.exit(2)"
 RUN groupadd -g 10001 sandbox && useradd -u 10001 -g 10001 -M -s /usr/sbin/nologin sandbox
 USER 10001:10001
 WORKDIR /tmp
