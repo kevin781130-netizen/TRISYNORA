@@ -1,0 +1,25 @@
+{
+  "contract": "trisynora.shot/v1",
+  "shotId": "H3Shot001",
+  "origin": {
+    "product": "minimax-h3",
+    "projectId": "H3demo",
+    "revision": "fixture-r1"
+  },
+  "native": {
+    "format": "h3-production-core/revision-unknown-fixture",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "timebase": {
+    "fpsNumerator": 30000,
+    "fpsDenominator": 1001,
+    "durationFrames": 1800
+  },
+  "assetIds": [
+    "asset_H3demo_001"
+  ],
+  "handoff": {
+    "mode": "reference-only",
+    "requiresExplicitBind": true
+  }
+}

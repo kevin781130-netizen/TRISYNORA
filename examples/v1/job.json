@@ -1,0 +1,20 @@
+{
+  "contract": "trisynora.job/v1",
+  "jobId": "Task001",
+  "target": {
+    "product": "pointflux",
+    "projectId": "PFdemo"
+  },
+  "requestedBy": "vera",
+  "operation": "import-reference",
+  "mode": "proposal-only",
+  "state": "proposed",
+  "idempotencyKey": "fixture-Task001",
+  "inputArtifactIds": [
+    "asset_H3demo_001"
+  ],
+  "outputPolicy": {
+    "mode": "derived-only",
+    "relativeDirectory": "derived/task001"
+  }
+}

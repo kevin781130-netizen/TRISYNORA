@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:trisynora:job:v1",
+  "title": "TRISYNORA job envelope v1",
+  "description": "This is descriptive metadata only. Receiver must independently authenticate and authorize each action.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "jobId",
+    "target",
+    "requestedBy",
+    "operation",
+    "mode",
+    "state",
+    "idempotencyKey",
+    "inputArtifactIds",
+    "outputPolicy"
+  ],
+  "properties": {
+    "contract": {
+      "const": "trisynora.job/v1"
+    },
+    "jobId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product",
+        "projectId"
+      ],
+      "properties": {
+        "product": {
+          "type": "string",
+          "enum": [
+            "vera",
+            "minimax-h3",
+            "pointflux"
+          ]
+        },
+        "projectId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        }
+      }
+    },
+    "requestedBy": {
+      "type": "string",
+      "enum": [
+        "vera",
+        "minimax-h3",
+        "pointflux"
+      ]
+    },
+    "operation": {
+      "enum": [
+        "inspect",
+        "render",
+        "transcode",
+        "judge",
+        "import-reference",
+        "export-artifact"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "proposal-only",
+        "receiver-approved"
+      ]
+    },
+    "state": {
+      "enum": [
+        "proposed",
+        "blocked",
+        "queued",
+        "running",
+        "completed",
+        "failed"
+      ]
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "inputArtifactIds": {
+      "type": "array",
+      "maxItems": 100,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+      }
+    },
+    "outputPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "relativeDirectory"
+      ],
+      "properties": {
+        "mode": {
+          "const": "derived-only"
+        },
+        "relativeDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*(?:/[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*)*$"
+        }
+      }
+    }
+  }
+}

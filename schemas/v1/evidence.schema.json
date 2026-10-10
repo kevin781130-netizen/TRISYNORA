@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:trisynora:evidence:v1",
+  "title": "TRISYNORA evidence envelope v1",
+  "description": "Domain evidence cannot claim cross-product or Vera final verification. A PASS requires executed=true.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "evidenceId",
+    "origin",
+    "subject",
+    "observation",
+    "authority",
+    "veraVerified"
+  ],
+  "properties": {
+    "contract": {
+      "const": "trisynora.evidence/v1"
+    },
+    "evidenceId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product",
+        "projectId",
+        "revision"
+      ],
+      "properties": {
+        "product": {
+          "type": "string",
+          "enum": [
+            "vera",
+            "minimax-h3",
+            "pointflux"
+          ]
+        },
+        "projectId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jobId",
+        "artifactSha256"
+      ],
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "artifactSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "check",
+        "verdict",
+        "executed",
+        "detail"
+      ],
+      "properties": {
+        "check": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "verdict": {
+          "enum": [
+            "pass",
+            "fail",
+            "inconclusive"
+          ]
+        },
+        "executed": {
+          "type": "boolean"
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "verdict": {
+                "const": "pass"
+              }
+            },
+            "required": [
+              "verdict"
+            ]
+          },
+          "then": {
+            "properties": {
+              "executed": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "authority": {
+      "const": "domain-only"
+    },
+    "veraVerified": {
+      "const": false
+    }
+  }
+}

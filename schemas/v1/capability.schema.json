@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:trisynora:capability:v1",
+  "title": "TRISYNORA capability envelope v1",
+  "description": "Discovery is informational and grants no execution or filesystem authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "origin",
+    "interfaceVersion",
+    "capabilities"
+  ],
+  "properties": {
+    "contract": {
+      "const": "trisynora.capability/v1"
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product",
+        "projectId",
+        "revision"
+      ],
+      "properties": {
+        "product": {
+          "type": "string",
+          "enum": [
+            "vera",
+            "minimax-h3",
+            "pointflux"
+          ]
+        },
+        "projectId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        }
+      }
+    },
+    "interfaceVersion": {
+      "const": 1
+    },
+    "capabilities": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "version",
+          "availability"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+          },
+          "availability": {
+            "enum": [
+              "ready",
+              "disabled",
+              "unverified"
+            ]
+          },
+          "nativeFormat": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        }
+      }
+    }
+  }
+}

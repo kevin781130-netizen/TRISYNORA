@@ -1,0 +1,22 @@
+{
+  "contract": "trisynora.capability/v1",
+  "origin": {
+    "product": "minimax-h3",
+    "projectId": "H3demo",
+    "revision": "branch-preview"
+  },
+  "interfaceVersion": 1,
+  "capabilities": [
+    {
+      "name": "reference-import",
+      "version": "v1",
+      "availability": "unverified",
+      "nativeFormat": "pointflux-h3-shot-exchange/v1"
+    },
+    {
+      "name": "ai-video-render",
+      "version": "v1",
+      "availability": "unverified"
+    }
+  ]
+}
