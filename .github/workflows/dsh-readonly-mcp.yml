@@ -18,6 +18,8 @@ jobs:
           python-version: '3.12'
       - name: Fail closed on owner-of-truth, duplicate Jobs and native-control expansion
         run: python -B experiments/deepseek-harness/ownership_gate.py
+      - name: Strict three-product untrusted status receipt contract and abuse regressions
+        run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_status_receipt.py" -v
       - name: Standalone MCP protocol and non-contamination tests
         run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_*.py" -v
       - uses: actions/setup-node@v4
