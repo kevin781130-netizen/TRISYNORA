@@ -10,7 +10,7 @@
 | Provider-neutral LLM/model switching (`llm/*`) | Keep inside external DSH process, never embed into Vera | **VERIFIED** official Web picker selects `deepseek-v4-pro`, actual request wire confirms ID; third-party routes untested |
 | MCP client (`@deepseek-ai/dsh-mcp-client`) | External DSH connects to the tiny read-only MCP server in this folder | **VERIFIED** official DSH Agent Loop and Web Browser route via actual stdio MCP |
 | User approval UI (`client/ui-approval`) | Use only for UI presentation; **cannot authorize native writes** | Conceptual, native binding deliberately absent |
-| Background job panel (`client/ui-jobs`) | Reuse later for read-only product-owned status receipts | Not connected; no fake native jobs |
+| Background job panel (`client/ui-jobs`) | Keep **Harness-internal only**. Never mirror native Vera/H3/PointFlux tasks into `job.list` or delegate `job.kill` | **DO NOT CONNECT** to native jobs; overlapping owner/control risk |
 | Harness Session persistence, browser reconnect and Host cold restart | Keep native DSH session log in isolated DSH_HOME; select historic Session from official Web sidebar | **VERIFIED** full Chromium restart and separate Host process termination/restart with original MCP result on model request wire |
 | Cordis Agent Loop, workflow/subagents, bash/FS/process | **Do not transplant into TRISYNORA**; native project ownership remains separate | Forbidden native access |
 
@@ -22,6 +22,26 @@ See original sources:
 - [MCP client](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/mcp/mcp-client/README.md)
 - [Safety statement](https://github.com/deepseek-ai/deepseek-harness/blob/master/SAFETY.zh.md)
 - [MIT and third-party notices](https://github.com/deepseek-ai/deepseek-harness/blob/master/LICENSE)
+
+## Eighth knife — owner-of-truth is now a CI gate
+
+Vera already owns Agent run state, terminal approval, verification and code
+model routing. MiniMax-H3 owns Director workflows and Take approval; PointFlux
+owns deterministic Scene IR, rendering and judgment. The shipped Harness
+Jobs UI has its own stop button and job-kill Remote, so it must **not** control
+native runs or pretend to be a second Vera command center.
+
+See [OWNERSHIP_BOUNDARY.md](OWNERSHIP_BOUNDARY.md) and the exact
+[capability_ownership.json](capability_ownership.json) mapping. CI invokes
+[ownership_gate.py](ownership_gate.py) before ordinary protocol/E2E tests
+and rejects native job mirroring, stop/retry, write/apply approval, extra
+MCP commands and DSH patch expansions. The positive and tampered-policy
+regressions are in [test_ownership_gate.py](test_ownership_gate.py).
+
+The gate is **limited to bridge/patch/tool declarations**; it does not
+disable the upstream DSH stock Shell/FS/Process tools. Running the DSH
+Web profile still requires a disposable sandbox with no native source
+mounts or credentials. The three native products remain NOT CONNECTED.
 
 ## The executable deliverable
 
@@ -104,4 +124,4 @@ The CI tests run independent Python protocol/contract checks, genuine MCP SDK st
 - Native product standalone regressions and actual three-project isolation: **NOT VERIFIED**.
 - All seven constitutional PRs: untouched, unmerged, and remain review-blocked where documented.
 
-**Next separate authorization gate:** evaluate only read-only, product-owner-approved status adapters or a non-native read-only Jobs view, with explicit provenance, sandbox restrictions and no delegated write permission. No native repos may be mounted into its default shell/process environment. This optional front end must never become an implicit shared Agent or shared mutable DB.
+**Next separate authorization gate:** only a separately reviewed, product-owned, *read-only* status receipt may be considered. Do not mirror Vera/H3/PointFlux native tasks into Harness Jobs or delegate cancel/retry/apply/approve powers. Do not mount native repositories or credentials into stock Harness; keep its own Jobs strictly internal. This optional front end must never become a shared Agent or mutable database.
