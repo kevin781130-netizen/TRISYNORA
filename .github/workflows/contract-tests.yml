@@ -31,5 +31,7 @@ jobs:
         run: python tools/bridge_rehearsal.py
       - name: G3 verify frozen six-PR ancestry and release blockers
         run: python tools/g3_release_gate.py
+      - name: G4 verify exact seven-PR file scopes before human merge
+        run: python tools/g4_merge_review.py
 # No write permissions, other repo checkouts, secrets or native products.
 # FFmpeg is installed in ephemeral CI only to test synthetic, isolated MP4.
