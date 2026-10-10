@@ -75,6 +75,18 @@ def validate_docker_invocation(argv: list[str], *,
         "/opt/trisynora/container_sandbox_probe.py",
     ]):
         raise SandboxPolicyError("unexpected image or executable")
-    if any("docker.sock" in x or "/home/runner/work/" in x and x
-           not in expected_mounts for x in argv):
-        raise SandboxPolicyError("host control socket or checkout exposure")
+    permitted = (
+        required
+        | expected_env
+        | expected_mounts
+        | set(envs)
+        | {
+            "docker", "run", "--rm", "--pull=never", "--mount",
+            "--workdir", "/tmp", "trisynora-dsh-os-boundary:local",
+            "python3", "/opt/trisynora/container_sandbox_probe.py",
+        }
+    )
+    if any(token not in permitted for token in argv):
+        raise SandboxPolicyError("unknown Docker switch or extra parameter")
+    if any("docker.sock" in x for x in argv):
+        raise SandboxPolicyError("host Docker control socket forbidden")
