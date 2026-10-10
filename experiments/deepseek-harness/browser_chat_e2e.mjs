@@ -26,6 +26,18 @@ async function main() {
   await page.locator("[data-composer-input]").first().waitFor({ timeout: 45000 });
   report.authenticated = true;
 
+  // The official first-run Web composition displays its preview notice over
+  // an inert root. Acknowledge only that notice in the disposable CI profile;
+  // never bypass a permission, product approval or credential dialog.
+  report.stage = "browser-preview-notice";
+  const welcomeAction = page.getByRole("dialog")
+    .getByRole("button", { name: /^(继续|Continue)$/ });
+  if (await welcomeAction.count() === 1) {
+    await welcomeAction.click();
+    await page.getByRole("dialog", { name: "预览版说明" })
+      .waitFor({ state: "detached", timeout: 15000 }).catch(() => {});
+  }
+
   const input = page.locator('[data-composer-input][contenteditable="true"]').first();
   report.stage = "browser-default-workspace-initialization";
   // Shipped first-use Web prepares a default Workspace asynchronously.
