@@ -85,6 +85,13 @@ jobs:
           DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
           TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
         run: python -B experiments/deepseek-harness/smoke_browser_chat.py
+      - name: Switch model in actual Web UI and verify wire model plus MCP response
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/trisynora-browser-binaries
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+          TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
+          TRISYNORA_MODEL_SWITCH_EXPECT: deepseek-v4-pro
+        run: python -B experiments/deepseek-harness/smoke_browser_chat.py
 # Browser UI and MCP are tested against a disposable loopback-only mock model.
 # No real model API key or native Vera / MiniMax-H3 / PointFlux source checkout.
 
