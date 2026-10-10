@@ -37,13 +37,12 @@ def validate_docker_invocation(argv: list[str], *,
         if any((p / ".git").exists() for p in (mount, *mount.parents)):
             raise SandboxPolicyError("git worktree may not enter container")
     expected_mounts = {
-        f"type=bind,src={runtime},dst=/opt/dsh,readonly",
         f"type=bind,src={stage},dst=/opt/trisynora,readonly",
     }
     mounts = [argv[i + 1] for i, x in enumerate(argv[:-1])
               if x == "--mount"]
-    if len(mounts) != 2 or set(mounts) != expected_mounts:
-        raise SandboxPolicyError("only two exact read-only mounts accepted")
+    if len(mounts) != 1 or set(mounts) != expected_mounts:
+        raise SandboxPolicyError("only image-baked DSH and exact staged readonly driver permitted")
     # No -v bind, docker socket, host pid/net/IPC, privileged, device,
     # extra mount, or environment borrowed from host runner.
     forbidden_prefixes = (
