@@ -36,3 +36,16 @@ Record exactly what runs and where. In a native product E2E phase, compare *sour
 ```
 
 The helper installs no dependency and invokes the existing test suite; run `python -m pip install -r requirements-dev.txt` separately, then rerun.
+
+## Evidence captured 2026-10-11 (Asia/Taipei)
+
+- GitHub Actions initial run `38071874703`: **FAILURE**, no job steps exposed, logs unavailable.
+- GitHub Actions second run `38072578206`: **FAILURE**, again no job steps exposed. Root cause **unconfirmed**; these are not successful CI executions.
+- In an isolated container, Python 3 + `jsonschema 4.26.0` executed `python -m unittest discover -s tests -v` with the new standalone verifier test module: **10 tests passed**.
+- Local verifier and test module bytes were compared against the GitHub branch using their Git blob hashes:
+  - `tools/verify_asset_package.py` = `8a980a82d65e66985a53c3d40bd0202a72600b86`
+  - `tests/test_verify_asset_package.py` = `c18541e3055d5bd9ff8dacb6d3651534b0ef9374`
+- **Scope limitation:** the isolated container had a compatible minimal asset schema substitute, not a byte-identical checkout of all GitHub `schemas/v1` and `tests/test_contracts.py`. The 10 passing verifier tests therefore are **not** a complete TRISYNORA contract-suite certification.
+- All standalone product tests, real media codecs, three-project runtime integrations, hardware E2E and cross-product write-firewall verification remain **NOT VERIFIED**.
+
+Do not promote this draft PR or release a version solely on the strength of these isolated tests.
