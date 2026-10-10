@@ -168,6 +168,16 @@ def run() -> dict:
                 if exit_code == 0 and _tool_result_received(Handler.requests) else "not-verified",
                 "headlessExitZero": exit_code == 0,
                 "providerRequests": len(Handler.requests),
+                "providerMessageSummaries": [
+                    {"roles": [x.get("role", "") for x in request.get("messages", [])
+                               if isinstance(x, dict)],
+                     "catalogFound": "catalog-only" in json.dumps(request.get("messages", [])),
+                     "toolResultFound": "tool_result" in json.dumps(request.get("messages", [])),
+                     "mcpNameFound": TARGET_TOOL in json.dumps(request.get("messages", [])),
+                     "errorMarkerFound": any(k in json.dumps(request.get("messages", [])).lower()
+                                             for k in ("iserror", "unknown tool", "not found", "not authorized"))}
+                    for request in Handler.requests[:5]
+                ],
                 "modelRequestedMcpTool": bool(Handler.requests) and
                     TARGET_TOOL in json.dumps(Handler.requests[0].get("tools", [])),
                 "toolResultObservedInSecondModelRequest": _tool_result_received(Handler.requests),
