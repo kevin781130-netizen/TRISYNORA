@@ -45,4 +45,27 @@ jobs:
           test -f experiments/deepseek-harness/dsh.patch.yml
           test ! -e experiments/deepseek-harness/credentials.json
           test ! -e experiments/deepseek-harness/token.env
-# This CI does NOT start DeepSeek Harness or access the three real native repos.
+# No Vera, H3, or PointFlux worktree is mounted or contacted.
+  pinned-harness-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned official DSH into temporary CI runtime
+        run: |
+          mkdir -p "$RUNNER_TEMP/dsh-runtime"
+          npm install --prefix "$RUNNER_TEMP/dsh-runtime" --no-audit --no-fund --ignore-scripts @deepseek-ai/dsh@0.2.0-rc.2
+      - name: Assemble actual DSH Web profile and verify HTTP startup
+        env:
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+        run: python -B experiments/deepseek-harness/smoke_harness_web.py
+# Live model calls and in-browser click automation are intentionally NOT tested.
+
