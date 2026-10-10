@@ -77,7 +77,8 @@ The only authenticated native capability grants must be issued by **each actual 
 
 - DSH Web launcher: **`@deepseek-ai/dsh@0.2.0-rc.2`**, installed from npm in a clean GitHub Actions temporary directory; the independent test checks that the official `--dump-config` includes our MCP plugin and the launched Web profile actually answers HTTP. No model is invoked.
 - Real MCP Client: **`@modelcontextprotocol/client@2.2.0`**, exactly the dependency used by upstream `dsh-mcp-client` in the inspected source. It launches `readonly_mcp.py` with stdio, lists three tools, calls the declared capability lookup, checks an actual digest-locked synthetic exchange package, and proves tampered media and write requests are rejected.
-- The MCP SDK and Web startup checks are **separate**: Web HTTP startup + configuration mounting does not yet prove that a browser session has called an MCP tool through DSH's own Agent Loop. That requires browser automation and a separately approved model route; do not report it as verified.
+- **Actual DSH Agent Loop (headless):** a temporary loopback-only mock Messages provider asks for `mcp__trisynora__trisynora_list_capabilities` and receives the genuine MCP result. The CI verifier requires a later model request to contain the model-facing `tool_result`, exact MCP tool name, and `catalog-only` payload. No paid model key, outbound inference, or native product call. This is separate from the official Web startup check and will be credited only after the head's actual CI passes.
+- **Browser remains unverified:** Headless Agent Loop tool routing does not imply that a Web browser session successfully invoked the MCP tool. A browser-level authenticated session and actual user interaction need their own test.
 - The contract is intended to be compatible with P1 envelope structure, with strict optional pilot limits. Source provenance is user-declared: **not native H3 signature/consent**.
 
 ## Developer and CI tests
@@ -86,13 +87,14 @@ The only authenticated native capability grants must be issued by **each actual 
 python3 -B -m unittest discover -s experiments/deepseek-harness -p 'test_*.py' -v
 ```
 
-The CI tests run **both** the independent Python protocol/contract checks and a genuine upstream MCP Client SDK handshake. A separate runner job installs a pinned official DeepSeek Harness Web app and verifies that it can parse the patch and start an HTTP listener in an isolated home and working directory. No native product, actual movie decoding, or model provider is invoked.
+The CI tests run the independent Python protocol/contract checks, a genuine upstream MCP Client SDK handshake, a pinned official DeepSeek Harness Web startup, and a separate **actual DSH Headless Agent Loop with an in-process scripted mock provider**. No native product, actual movie decoding, real model API provider or model key is used. Do not label headless routing as browser-session proof.
 
 **Acceptance status (limited):**
 - MCP unit and direct stdio contract: **VERIFIED** after checking CI at the current head.
 - Official MCP Client SDK discovers and invokes tools: **VERIFIED** after checking CI at the current head.
 - Official DSH Web startup and patch inclusion: **VERIFIED** after checking CI at the current head.
-- Browser chat calling MCP through the DSH Agent Loop, including actual model output: **NOT VERIFIED**.
+- Official DSH Headless Agent Loop → MCP real tool response → second/subsequent mock model request: **VERIFIED ONLY IF** the standalone headless gate passes on the exact current CI head.
+- Web browser Agent session invoking MCP: **NOT VERIFIED**. This is different from headless tool routing.
 - Real H3/PointFlux/Vera adapters, approvals, and video import: **NOT IMPLEMENTED**.
 - Native product standalone regressions and actual three-project isolation: **NOT VERIFIED**.
 - All seven constitutional PRs: untouched, unmerged, and remain review-blocked where documented.
