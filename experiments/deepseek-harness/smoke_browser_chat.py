@@ -183,6 +183,9 @@ def run() -> dict:
                         time.sleep(0.4)
                     if not url:
                         return {"status": "not-verified", "stage": "web-authenticated-startup"}
+                    resume_mode = os.environ.get("TRISYNORA_SESSION_RESUME_EXPECT", "")
+                    if resume_mode not in ("", "1"):
+                        raise RuntimeError("session-resume mode must be explicitly allowlisted")
                     expected_model = os.environ.get("TRISYNORA_MODEL_SWITCH_EXPECT", "")
                     if expected_model not in ("", "deepseek-v4-pro"):
                         raise RuntimeError("model-switch allowlist violated")
@@ -191,6 +194,7 @@ def run() -> dict:
                         "DSH_AUTH_URL": url,
                         "TRISYNORA_BROWSER_WORKSPACE": str(root / "work"),
                         "TRISYNORA_MODEL_SWITCH_EXPECT": expected_model,
+                        "TRISYNORA_SESSION_RESUME_EXPECT": resume_mode,
                     })
                     try:
                         browser = subprocess.run(
@@ -218,13 +222,45 @@ def run() -> dict:
                         and browser_report.get("modelSwitchSelected") is True
                         if expected_model else True
                     )
-                    passed = displayed and evidence and offered and not BrowserProvider.error and model_ok
+                    # Continuation must contain both distinct user turns and
+                    # the original MCP result in ONE later wire request;
+                    # otherwise a fresh session or UI-only replay is a FAIL.
+                    replay_receipt = any(
+                        all(marker in json.dumps(req.get("messages", []))
+                            for marker in (
+                                "TRISYNORA_SESSION_HISTORY_FIRST",
+                                "TRISYNORA_SESSION_HISTORY_SECOND",
+                                "catalog-only",
+                                TARGET_TOOL,
+                            ))
+                        for req in BrowserProvider.requests[3:]
+                    )
+                    resumed = (
+                        browser_report.get("browserProcessExited") is True
+                        and browser_report.get("historyRestoredInFreshBrowser") is True
+                        and browser_report.get("continuationSubmitted") is True
+                        and browser_report.get("continuationRendered") is True
+                        and replay_receipt
+                    ) if resume_mode else True
+                    passed = (
+                        displayed and evidence and offered
+                        and not BrowserProvider.error and model_ok and resumed
+                    )
                     return {
                         "status": (
-                            "browser-model-switch-mcp-pass" if expected_model
+                            "browser-session-resume-mcp-pass" if resume_mode
+                            else "browser-model-switch-mcp-pass" if expected_model
                             else "browser-agent-mcp-pass"
                         ) if passed else "not-verified",
                         "stage": browser_report.get("stage", "unknown") if not passed else "complete",
+                        "browserProcessExited": browser_report.get("browserProcessExited", False),
+                        "historyRestoredInFreshBrowser": browser_report.get(
+                            "historyRestoredInFreshBrowser", False),
+                        "continuationSubmitted": browser_report.get(
+                            "continuationSubmitted", False),
+                        "continuationRendered": browser_report.get(
+                            "continuationRendered", False),
+                        "historicMcpContextPresentOnWire": replay_receipt if resume_mode else None,
                         "selectedModelVerified": model_ok if expected_model else None,
                         "selectedModelOnWire": expected_model if model_ok and expected_model else None,
                         "browserModelPickerSelected": browser_report.get("modelSwitchSelected", False),
@@ -263,6 +299,7 @@ def main() -> int:
     print(json.dumps(result, sort_keys=True))
     return 0 if result["status"] in (
         "browser-agent-mcp-pass", "browser-model-switch-mcp-pass",
+        "browser-session-resume-mcp-pass",
     ) else 2
 
 
