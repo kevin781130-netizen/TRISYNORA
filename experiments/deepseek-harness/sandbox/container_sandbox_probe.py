@@ -9,6 +9,7 @@ and executes genuine DSH Headless Agent→MCP inside the SAME container.
 from __future__ import annotations
 
 import json
+import re
 import os
 from pathlib import Path
 import socket
@@ -129,6 +130,34 @@ def main() -> int:
     # Same Docker process now launches the real installed upstream Agent
     # and Python stdio MCP. Its keyless SSE provider binds only loopback
     # WITHIN this isolated network namespace and is still allowed.
+    command_probe = {}
+    original_run = agent.subprocess.run
+    def run_with_safe_diagnostics(*args, **kwargs):
+        completed = original_run(*args, **kwargs)
+        # Never disclose process stdout/stderr, model URLs or auth values.
+        text_value = ((completed.stderr or "") + "\n" +
+                      (completed.stdout or ""))
+        categories = (
+            "EACCES", "EROFS", "ENOENT", "EPERM", "ECONNREFUSED",
+            "ERR_MODULE_NOT_FOUND", "MODULE_NOT_FOUND", "SQLITE_READONLY",
+            "permission denied", "read-only file system",
+            "Cannot find module", "unknown option", "not found",
+            "fetch failed", "Error:", "error:",
+        )
+        command_probe.update({
+            "exit": completed.returncode,
+            "stdoutCharacters": len(completed.stdout or ""),
+            "stderrCharacters": len(completed.stderr or ""),
+            "errorCategories": [name for name in categories
+                                if name.lower() in text_value.lower()],
+            "lastNonemptyLineCategory": (
+                "javascript-stack" if "at " in text_value
+                else "usage-or-error" if text_value.strip()
+                else "no-output"
+            ),
+        })
+        return completed
+    agent.subprocess.run = run_with_safe_diagnostics
     try:
         result = agent.run()
         genuine = (
@@ -140,6 +169,8 @@ def main() -> int:
     except (RuntimeError, OSError, ValueError, subprocess.TimeoutExpired):
         genuine = False
         result = {}
+    finally:
+        agent.subprocess.run = original_run
     check(genuine, "officialHarnessAgentMcpInSameContainer")
 
     report = {
@@ -149,6 +180,7 @@ def main() -> int:
         "failedChecks": failures,  # Static check names, no host paths or keys.
         "officialDshMcpSuccess": genuine,
         "agentDiagnostics": {
+            "dshProcess": command_probe,
             "status": result.get("status"),
             "headlessExitZero": result.get("headlessExitZero"),
             "providerRequests": result.get("providerRequests"),
