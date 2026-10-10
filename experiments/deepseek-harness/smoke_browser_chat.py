@@ -207,6 +207,7 @@ def run() -> dict:
                         "status": "browser-agent-mcp-pass" if passed else "not-verified",
                         "stage": browser_report.get("stage", "unknown") if not passed else "complete",
                         "browserAuthenticatedChat": browser_report.get("authenticated", False),
+                        "browserDiagnostics": browser_report.get("diagnostics", {}),
                         "browserSubmittedUserPrompt": browser_report.get("submitted", False),
                         "browserRenderedMcpResult": displayed,
                         "modelRequestedMcpTool": offered,
