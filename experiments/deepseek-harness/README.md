@@ -73,19 +73,28 @@ Refer to Harness's [profile and patch guide](https://github.com/deepseek-ai/deep
 
 The only authenticated native capability grants must be issued by **each actual product's own adapter and human permissions** in a future, separately reviewed product-specific PR. Merely clicking Approve in Harness **must never** grant permission to write a Vera, H3 or PointFlux workspace.
 
+## Verified integration boundary and pinned upstream packages
+
+- DSH Web launcher: **`@deepseek-ai/dsh@0.2.0-rc.2`**, installed from npm in a clean GitHub Actions temporary directory; the independent test checks that the official `--dump-config` includes our MCP plugin and the launched Web profile actually answers HTTP. No model is invoked.
+- Real MCP Client: **`@modelcontextprotocol/client@2.2.0`**, exactly the dependency used by upstream `dsh-mcp-client` in the inspected source. It launches `readonly_mcp.py` with stdio, lists three tools, calls the declared capability lookup, checks an actual digest-locked synthetic exchange package, and proves tampered media and write requests are rejected.
+- The MCP SDK and Web startup checks are **separate**: Web HTTP startup + configuration mounting does not yet prove that a browser session has called an MCP tool through DSH's own Agent Loop. That requires browser automation and a separately approved model route; do not report it as verified.
+- The contract is intended to be compatible with P1 envelope structure, with strict optional pilot limits. Source provenance is user-declared: **not native H3 signature/consent**.
+
 ## Developer and CI tests
 
 ```sh
 python3 -B -m unittest discover -s experiments/deepseek-harness -p 'test_*.py' -v
 ```
 
-These tests exercise MCP JSON-RPC over actual stdio, immutable package inspection on temporary synthetic data, capability discovery and write-denial. No DSH app, model provider, native product, GPU or media decoding is started.
+The CI tests run **both** the independent Python protocol/contract checks and a genuine upstream MCP Client SDK handshake. A separate runner job installs a pinned official DeepSeek Harness Web app and verifies that it can parse the patch and start an HTTP listener in an isolated home and working directory. No native product, actual movie decoding, or model provider is invoked.
 
-**Acceptance status:**
-- MCP standalone unit + transport tests: recorded from CI once run passes.
-- Actual DeepSeek Web UI + MCP plugin handshake: **NOT YET VERIFIED**. Published Harness changes compatibility frequently.
-- Real H3/PointFlux/Vera adapters and full front-end command calls: **NOT IMPLEMENTED**.
-- Product zero-contamination under actual runtime operation: **NOT VERIFIED** until independently audited.
-- All seven constitutional PRs: untouched, unmerged and remain review-blocked where documented.
+**Acceptance status (limited):**
+- MCP unit and direct stdio contract: **VERIFIED** after checking CI at the current head.
+- Official MCP Client SDK discovers and invokes tools: **VERIFIED** after checking CI at the current head.
+- Official DSH Web startup and patch inclusion: **VERIFIED** after checking CI at the current head.
+- Browser chat calling MCP through the DSH Agent Loop, including actual model output: **NOT VERIFIED**.
+- Real H3/PointFlux/Vera adapters, approvals, and video import: **NOT IMPLEMENTED**.
+- Native product standalone regressions and actual three-project isolation: **NOT VERIFIED**.
+- All seven constitutional PRs: untouched, unmerged, and remain review-blocked where documented.
 
-The next isolated step, **only after this small MCP bridge is accepted**, is to run a disposable DSH Web + MCP smoke test with source roots unmounted and prove the user can list capabilities and inspect one package; then add **per-product, opt-in, read-only status adapters** owned and approved by the relevant product developers.
+**Next separate authorization gate:** enable only product-owner-approved read-only status adapters and later test a DSH browser-session tool call without inheriting shell/process/file permissions. This optional front end must never become an implicit shared Agent or shared mutable DB.
