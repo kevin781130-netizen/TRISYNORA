@@ -177,7 +177,7 @@ def run() -> dict:
             before = list(BrowserProvider.requests)
             seed_valid = (
                 first_report.get("ok") is True
-                and first_report.get("browserModelPickerSelected") is True
+                and first_report.get("modelSwitchSelected") is True
                 and first_report.get("submitted") is True
                 and _tool_result_received([{}] + before)
                 and _wire_model_is_correct(before)
@@ -189,6 +189,11 @@ def run() -> dict:
                     "stage": "original-session-and-mcp",
                     "browserStage": first_report.get("stage", "unknown"),
                     "firstProviderRequests": len(before),
+                    "firstModelPickerSelected":
+                        first_report.get("modelSwitchSelected", False),
+                    "firstModelOnWireCorrect": _wire_model_is_correct(before),
+                    "firstMcpResultReceived": _tool_result_received([{}] + before),
+                    "firstProviderError": BrowserProvider.error,
                 }
 
             old_pid = first.pid
