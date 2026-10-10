@@ -95,7 +95,7 @@ class G4ReviewScopeTests(unittest.TestCase):
     def test_modified_g3_frozen_commit_detected(self):
         scope = copy.deepcopy(self.scope)
         scope["historicP1toP6"][5]["headCommit"] = "0" * 40
-        with self.assertRaisesRegex(FreezeGateError, "frozen"):
+        with self.assertRaisesRegex(FreezeGateError, "freeze"):
             validate_scope(scope, self.freeze)
 
     def test_missing_current_lock_field_detected(self):
