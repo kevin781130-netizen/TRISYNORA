@@ -31,10 +31,11 @@ Expected result is `status=g3-foundation-freeze-verified` with **`productionRele
 
 The following remains **manual only**:
 
-1. Review the full `CONSTITUTION.md` and source scope of PR #1. After explicit owner approval, mark ready, merge PR #1 into `main` and record actual merge SHA.
-2. Rebase or retarget PR #2 onto the new main without losing its change isolation. Re-run its CI on the new head. Approve and merge #2 only after checking the diff.
-3. Repeat for #3, #4, #5 and #6 in order, always checking branch base, file diff, CI success at the *new* merge candidate, and source repository non-contamination.
-4. G3 (this seventh PR) is independently reviewed and merged only after the first six. Stacked draft branches should not be automatically deleted or merged by unrelated actions.
+1. Review the full `CONSTITUTION.md` and source scope of PR #1. After **explicit owner approval**, mark ready and merge PR #1 into `main` with a **merge commit** (preserving frozen Git ancestry). Record actual merge SHA.
+2. **Retarget** PR #2's base to `main` **without rebasing or rewriting its head commits**. Inspect the resulting delta, rerun CI on the merge candidate and merge by merge commit only after independent approval.
+3. Repeat for #3, #4, #5 and #6 in order, always retargeting to `main` after the parent merges, checking changed paths, CI and zero source-repository writes.
+4. G3/G4 (this seventh PR) is reviewed and merged only after the first six. **Do not use Squash or Rebase and merge** under the current frozen-head ancestry policy: these rewrite/discard commits that the gate requires. If merge commits are disabled, STOP and prepare a separately approved regenerated lock; never silently bypass the freeze.
+5. Keep the stacked branches until all proof is recorded. No PR may be automatically marked ready, retargeted, rebased, merged or deleted. See [G4 manual merge review](G4_MERGE_READINESS.md).
 5. Before **any public release**: owner explicitly selects a distribution license and reviews copyright/third-party obligations. **This repository currently has no distribution LICENSE** in its tracked tree; being Public does not automatically authorize code reuse under MIT.
 6. Version/tag/publish must be separately and explicitly authorized. Do not create `v0.1.0` or `v0.1.0-rc1` merely because G3 checks pass.
 
