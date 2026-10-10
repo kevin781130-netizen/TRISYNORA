@@ -1,6 +1,8 @@
 # Test-only Docker OS boundary for OFFICIAL external DSH, no native projects.
 # Build using a completely EMPTY context; never COPY TRISYNORA or product repos.
-FROM node:24-bookworm-slim
+# Debian 13 (glibc >= Ubuntu runner's typical ABI) is needed by the pinned
+# official Harness native node-addon-require-builtin .node binding.
+FROM node:24-trixie-slim
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 bash ca-certificates git procps \
     && rm -rf /var/lib/apt/lists/*
