@@ -32,7 +32,7 @@ Independent receiver-style validation:
 Outputs:
 
     take001/
-      .ready.json
+      ready.json
       assets/asset_H3demo_001.mp4
       manifests/asset.json
       manifests/shot.json

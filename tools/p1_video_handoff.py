@@ -123,7 +123,7 @@ def pack(*, source_root: Path, video: str, native_file: str, destination: Path,
             raise HandoffError("native snapshot changed during packaging")
         asset_sha = write_json_new(dest / "manifests" / "asset.json", asset)
         shot_sha = write_json_new(dest / "manifests" / "shot.json", shot)
-        write_json_new(dest / ".ready.json", {
+        write_json_new(dest / "ready.json", {
             "format": "trisynora.h3-video-package/v1",
             "assetManifestSha256": asset_sha,
             "shotManifestSha256": shot_sha,
@@ -141,7 +141,7 @@ def inspect(package_root: Path) -> dict:
         raise HandoffError("package must be a real directory")
     root = package_root.resolve(strict=True)
     try:
-        marker_file = _contained_file(root, ".ready.json")
+        marker_file = _contained_file(root, "ready.json")
         if marker_file.stat().st_size > 4096:
             raise HandoffError("readiness marker too large")
         marker = _json_bytes(marker_file.read_bytes())

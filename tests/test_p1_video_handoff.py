@@ -107,7 +107,7 @@ class P1VideoHandoffTests(unittest.TestCase):
 
     def test_missing_ready_marker_fails_receiver(self):
         pack(**self.kwargs)
-        (self.dest / ".ready.json").unlink()
+        (self.dest / "ready.json").unlink()
         with self.assertRaisesRegex(HandoffError, "readiness"):
             inspect(self.dest)
 
@@ -117,7 +117,7 @@ class P1VideoHandoffTests(unittest.TestCase):
         data = json.loads(p.read_text(encoding="utf-8"))
         data["origin"]["product"] = "pointflux"
         p.write_text(json.dumps(data), encoding="utf-8")
-        m = self.dest / ".ready.json"
+        m = self.dest / "ready.json"
         ready = json.loads(m.read_text(encoding="utf-8"))
         ready["assetManifestSha256"] = hashlib.sha256(p.read_bytes()).hexdigest()
         m.write_text(json.dumps(ready), encoding="utf-8")
