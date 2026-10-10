@@ -183,6 +183,9 @@ def run() -> dict:
                         time.sleep(0.4)
                     if not url:
                         return {"status": "not-verified", "stage": "web-authenticated-startup"}
+                    expected_model = os.environ.get("TRISYNORA_MODEL_SWITCH_EXPECT", "")
+                    if expected_model not in ("", "deepseek-v4-pro"):
+                        raise RuntimeError("model-switch allowlist violated")
                     browser_env = dict(env)
                     browser_env.update({
                         "DSH_AUTH_URL": url,
@@ -202,10 +205,28 @@ def run() -> dict:
                         for req in BrowserProvider.requests)
                     displayed = (browser.returncode == 0 if "browser" in locals() else False) and (
                         browser_report.get("ok") is True)
-                    passed = displayed and evidence and offered and not BrowserProvider.error
+                    # Backend audit: the genuine provider requests, not the UI
+                    # display or mock-model response, must use the selected ID.
+                    wire_models = {
+                        request.get("model", "")
+                        for request in BrowserProvider.requests
+                        if isinstance(request.get("model"), str)
+                    }
+                    model_ok = (
+                        wire_models == {expected_model}
+                        and browser_report.get("modelSwitchSelected") is True
+                        if expected_model else True
+                    )
+                    passed = displayed and evidence and offered and not BrowserProvider.error and model_ok
                     return {
-                        "status": "browser-agent-mcp-pass" if passed else "not-verified",
+                        "status": (
+                            "browser-model-switch-mcp-pass" if expected_model
+                            else "browser-agent-mcp-pass"
+                        ) if passed else "not-verified",
                         "stage": browser_report.get("stage", "unknown") if not passed else "complete",
+                        "selectedModelVerified": model_ok if expected_model else None,
+                        "selectedModelOnWire": expected_model if model_ok and expected_model else None,
+                        "browserModelPickerSelected": browser_report.get("modelSwitchSelected", False),
                         "browserAuthenticatedChat": browser_report.get("authenticated", False),
                         "browserDiagnostics": browser_report.get("diagnostics", {}),
                         "browserSubmittedUserPrompt": browser_report.get("submitted", False),
@@ -239,7 +260,9 @@ def main() -> int:
         result = {"status": "not-verified", "stage": "runner",
                   "errorType": type(exc).__name__}
     print(json.dumps(result, sort_keys=True))
-    return 0 if result["status"] == "browser-agent-mcp-pass" else 2
+    return 0 if result["status"] in (
+        "browser-agent-mcp-pass", "browser-model-switch-mcp-pass",
+    ) else 2
 
 
 if __name__ == "__main__":
