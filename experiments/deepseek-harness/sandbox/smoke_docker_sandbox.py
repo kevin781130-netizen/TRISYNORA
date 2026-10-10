@@ -162,6 +162,7 @@ def main() -> int:
             "officialHeadlessAgentMcpInContainer":
                 proof.get("officialDshMcpSuccess") is True,
             "boundaryChecks": proof.get("checks", {}),
+            "agentDiagnostics": proof.get("agentDiagnostics", {}),
             "failedChecks": proof.get("failedChecks", []),
             "syntheticHostSecretsIntact": host_untouched,
             "readOnlyFixtureIntact": mount_untouched,
