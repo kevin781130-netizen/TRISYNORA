@@ -8,6 +8,7 @@ native project approval. No DeepSeek Harness dependency is needed to test it.
 from __future__ import annotations
 
 import hashlib
+from fractions import Fraction
 import json
 import os
 from pathlib import Path
@@ -21,6 +22,8 @@ MAX_JSON_BYTES = 524288
 MAX_MEDIA_BYTES = 128 * 1024 * 1024
 ID = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,63}$")
 SHA = re.compile(r"^[0-9a-f]{64}$")
+REV = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+NATIVE_FORMAT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,119}$")
 CONTRACTS = ("trisynora.asset/v1", "trisynora.shot/v1")
 PRODUCTS = {
     "vera": ("governance-evidence", "validate-handoff"),
@@ -202,6 +205,36 @@ def inspect(package_id: str) -> dict[str, Any]:
     size, actual = _digest_media(_file(pkg, media["path"], MAX_MEDIA_BYTES), MAX_MEDIA_BYTES)
     if size != media["sizeBytes"] or actual != sha:
         raise Rejected("media bytes do not match receipt")
+    # Minimal fail-closed structural checks mirror P0 schema and the stricter
+    # 60-second pilot, without importing unmerged PR #1 schemas.
+    def fields(obj: Any, expected: set[str], label: str) -> None:
+        if not isinstance(obj, dict) or set(obj) != expected:
+            raise Rejected(f"invalid {label} contract fields")
+
+    fields(asset, {"contract", "artifactId", "origin", "media", "publication"}, "Asset")
+    fields(shot, {"contract", "shotId", "origin", "native", "timebase", "assetIds", "handoff"}, "Shot")
+    fields(origin, {"product", "projectId", "revision"}, "origin")
+    fields(media, {"kind", "mimeType", "sizeBytes", "sha256", "path"}, "media")
+    fields(pub, {"mode", "requiresReceiverApproval"}, "publication")
+    fields(handoff, {"mode", "requiresExplicitBind"}, "handoff")
+    fields(shot["native"], {"format", "sha256"}, "native")
+    fields(shot["timebase"], {"fpsNumerator", "fpsDenominator", "durationFrames"}, "timebase")
+    if (not isinstance(origin["projectId"], str) or not ID.fullmatch(origin["projectId"])
+            or not isinstance(origin["revision"], str) or not REV.fullmatch(origin["revision"])
+            or not isinstance(shot["native"]["format"], str)
+            or not NATIVE_FORMAT.fullmatch(shot["native"]["format"])):
+        raise Rejected("invalid source provenance syntax")
+    _sha_field(shot["native"]["sha256"])
+    rate_data = shot["timebase"]
+    for key in ("fpsNumerator", "fpsDenominator", "durationFrames"):
+        v = rate_data[key]
+        if type(v) is not int or v < 1 or v > (10_000_000 if key == "durationFrames" else 1_000_000):
+            raise Rejected("invalid timebase integer")
+    source_fps = Fraction(rate_data["fpsNumerator"], rate_data["fpsDenominator"])
+    duration = Fraction(rate_data["durationFrames"] * rate_data["fpsDenominator"],
+                        rate_data["fpsNumerator"])
+    if not (1 <= source_fps <= 120) or not (0 < duration <= 60):
+        raise Rejected("timebase outside pilot policy")
     # Manifest may mutate during hashing; without a locked snapshot, reject.
     if (_read_json(pkg, "manifests/asset.json")[1] != asset_digest
             or _read_json(pkg, "manifests/shot.json")[1] != shot_digest
