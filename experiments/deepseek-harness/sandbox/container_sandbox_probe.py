@@ -148,6 +148,16 @@ def main() -> int:
         "checks": facts,
         "failedChecks": failures,  # Static check names, no host paths or keys.
         "officialDshMcpSuccess": genuine,
+        "agentDiagnostics": {
+            "status": result.get("status"),
+            "headlessExitZero": result.get("headlessExitZero"),
+            "providerRequests": result.get("providerRequests"),
+            "modelRequestedMcpTool": result.get("modelRequestedMcpTool"),
+            "toolResultObservedInLaterModelRequest":
+                result.get("toolResultObservedInLaterModelRequest"),
+            "mockProviderError": result.get("mockProviderError"),
+            "providerMessageSummaries": result.get("providerMessageSummaries", []),
+        },
         "nativeProductsMounted": False if facts.get("noNativeCheckoutMounts") else None,
         "hostNetworkDisabled": facts.get("hostLoopbackServiceUnreachable")
         and facts.get("internetEgressDenied"),
