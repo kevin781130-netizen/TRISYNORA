@@ -44,6 +44,10 @@ python -m unittest discover -s tests -v
 
 The tests are designed to work locally even when GitHub Actions cannot run. CI is advisory until a **real, recorded PASS** exists; an unexecuted workflow is not proof.
 
+### Optional read-only preflight
+
+`tools/preflight_exchange.py` checks links between validated Asset, Shot, Job and Evidence manifests, and can optionally SHA-256-verify media bytes. It never submits jobs, opens another product's private data, or grants receiver authorization. Read [local acceptance and the preflight CLI examples](docs/LOCAL_ACCEPTANCE.md).
+
 ## Non-goals (deliberate)
 
 No shared database; no git submodules or vendored product engines; no implicit cross-repository imports; no always-running central broker; no fourth director UI; no automatic merges or writes to source projects; no unverified claims of three-project E2E video production.

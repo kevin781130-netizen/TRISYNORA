@@ -7,7 +7,8 @@
 - [x] Five neutral v1 schemas and positive/negative conformance examples added.
 - [x] Offline boundary tests and opt-in CI workflow added.
 - [ ] Review/merge this TRISYNORA-only PR.
-- [ ] Record an actual local conformance test PASS; workflow file existence is not CI evidence.
+- [x] Record an actual local conformance test PASS: 36/36 on an isolated, Git-blob-verified contract/tool snapshot; see `docs/LOCAL_ACCEPTANCE.md` for the constitution-fixture limitation.
+- [ ] Resolve or explicitly document GitHub Actions failures; run full-checkout tests with trustworthy CI or operator-local evidence.
 - [ ] Agree on version v0.1.0 after review; do not auto-publish.
 
 ## P1 — Optional first real bridge: H3 ↔ PointFlux
