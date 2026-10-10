@@ -59,6 +59,24 @@ async function main() {
     await dialog.getByRole("button", { name: "Open", exact: true }).click();
   }
 
+  // Verify the shipped Web model picker, not a synthetic model settings
+  // mutation or a direct provider call. CI runs this as an independent
+  // disposable session after the baseline catalog-only smoke.
+  const targetModel = process.env.TRISYNORA_MODEL_SWITCH_EXPECT;
+  if (targetModel) {
+    if (targetModel !== "deepseek-v4-pro") throw new Error("model allowlist");
+    report.stage = "browser-model-menu";
+    const selector = page.getByRole("button", { name: /^Select model/ }).first();
+    await selector.waitFor({ state: "visible", timeout: 15000 });
+    await selector.click();
+    await page.getByRole("menuitem", { name: /^Model/ }).click();
+    report.stage = "browser-model-select";
+    await page.getByRole("menuitemradio", { name: /DeepSeek-V4-Pro/i }).click();
+    await page.locator('[data-composer-input][contenteditable="true"]').first()
+      .waitFor({ state: "visible", timeout: 15000 });
+    report.modelSwitchSelected = true;
+  }
+
   report.stage = "browser-compose";
   await input.waitFor({ state: "visible", timeout: 30000 });
   await input.fill("Use the TRISYNORA read-only capability list tool once. Report its catalog status.");
