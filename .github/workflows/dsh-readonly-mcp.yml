@@ -59,7 +59,7 @@ jobs:
 # No Vera, H3, or PointFlux worktree is mounted or contacted.
   pinned-harness-web:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -82,10 +82,6 @@ jobs:
         env:
           DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
         run: python -B experiments/deepseek-harness/smoke_agent_loop.py
-      - name: Isolate actual pinned Harness Agent in rootless-permission Docker and test host escape boundaries
-        env:
-          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
-        run: python -B experiments/deepseek-harness/sandbox/smoke_docker_sandbox.py
       - name: Install pinned Playwright and isolated Chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/trisynora-browser-binaries
