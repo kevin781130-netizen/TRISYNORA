@@ -1,0 +1,35 @@
+name: Optional DeepSeek Harness read-only MCP experiment
+on:
+  pull_request:
+  push:
+    branches: [experiment/deepseek-harness-readonly-mcp]
+permissions:
+  contents: read
+jobs:
+  mcp-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Standalone MCP protocol and non-contamination tests
+        run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_*.py" -v
+      - name: Ensure no product source or full Harness payload is vendored
+        shell: bash
+        run: |
+          test ! -e Vera
+          test ! -e minimax-H3
+          test ! -e PointFlux
+          test ! -e node_modules
+          test ! -e vendor
+          test ! -e .gitmodules
+          test ! -e LICENSE
+          test -f experiments/deepseek-harness/readonly_mcp.py
+          test -f experiments/deepseek-harness/dsh.patch.yml
+          test ! -e experiments/deepseek-harness/credentials.json
+          test ! -e experiments/deepseek-harness/token.env
+# This CI does NOT start DeepSeek Harness or access the three real native repos.
