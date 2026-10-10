@@ -92,6 +92,14 @@ jobs:
           TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
           TRISYNORA_MODEL_SWITCH_EXPECT: deepseek-v4-pro
         run: python -B experiments/deepseek-harness/smoke_browser_chat.py
+      - name: Reopen saved Session in new Chromium process and verify MCP model context
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/trisynora-browser-binaries
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+          TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
+          TRISYNORA_MODEL_SWITCH_EXPECT: deepseek-v4-pro
+          TRISYNORA_SESSION_RESUME_EXPECT: '1'
+        run: python -B experiments/deepseek-harness/smoke_browser_chat.py
 # Browser UI and MCP are tested against a disposable loopback-only mock model.
 # No real model API key or native Vera / MiniMax-H3 / PointFlux source checkout.
 
