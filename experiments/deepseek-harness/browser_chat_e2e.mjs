@@ -32,13 +32,24 @@ async function main() {
   report.stage = "browser-preview-notice";
   const welcomeAction = page.getByRole("dialog")
     .getByRole("button", { name: /^(继续|Continue)$/ });
-  if (await welcomeAction.count() === 1) {
-    await welcomeAction.click();
-    await page.getByRole("dialog", { name: "预览版说明" })
-      .waitFor({ state: "detached", timeout: 15000 }).catch(() => {});
+  const input = page.locator('[data-composer-input][contenteditable="true"]').first();
+  // First-use notice and initial workspace are asynchronous. Never decide
+  // no notice exists from an immediate count(): it can mount after boot.
+  const readyBy = Date.now() + 30000;
+  while (Date.now() < readyBy) {
+    if (await welcomeAction.isVisible().catch(() => false)) {
+      await welcomeAction.click();
+      await welcomeAction.waitFor({ state: "hidden", timeout: 15000 });
+    }
+    const blocked = await page.locator("#root")
+      .evaluate(el => el.inert).catch(() => true);
+    if (!blocked) break;
+    await page.waitForTimeout(250);
+  }
+  if (await page.locator("#root").evaluate(el => el.inert).catch(() => true)) {
+    throw new Error("first-run notice still blocking browser UI");
   }
 
-  const input = page.locator('[data-composer-input][contenteditable="true"]').first();
   report.stage = "browser-default-workspace-initialization";
   // Shipped first-use Web prepares a default Workspace asynchronously.
   // Do not mistake the initial read-only composer for absent Workspace.
