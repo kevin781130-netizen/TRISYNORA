@@ -18,6 +18,19 @@ jobs:
           python-version: '3.12'
       - name: Standalone MCP protocol and non-contamination tests
         run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_*.py" -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned genuine MCP client SDK into disposable temp directory
+        run: |
+          mkdir -p "$RUNNER_TEMP/trisynora-mcp-sdk"
+          npm install --prefix "$RUNNER_TEMP/trisynora-mcp-sdk" --no-audit --no-fund --ignore-scripts @modelcontextprotocol/client@2.2.0
+          cp experiments/deepseek-harness/mcp_client_smoke.mjs "$RUNNER_TEMP/trisynora-mcp-sdk/smoke.mjs"
+      - name: Connect real MCP SDK using stdio and verify tool discovery
+        env:
+          PYTHON: python3
+          TRISYNORA_MCP_SCRIPT: ${{ github.workspace }}/experiments/deepseek-harness/readonly_mcp.py
+        run: node "$RUNNER_TEMP/trisynora-mcp-sdk/smoke.mjs"
       - name: Ensure no product source or full Harness payload is vendored
         shell: bash
         run: |
