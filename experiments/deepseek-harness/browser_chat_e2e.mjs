@@ -156,11 +156,23 @@ async function main() {
       const treeRows = secondPage.getByRole("treeitem");
       const group = treeRows.first();
       await group.waitFor({ state: "visible", timeout: 20000 });
-      // The sidebar may already be expanded. Blindly clicking its Workspace
-      // row would COLLAPSE the sessions and hide the original conversation.
-      if (await group.getAttribute("aria-expanded") === "false") {
-        await group.click();
+      // Sidebar readiness is asynchronous across browser reconnect. A single
+      // click can race with the Host's initial Workspace projection, leaving
+      // the group collapsed. Require a real visible Session row before
+      // proceeding; retries are bounded and never create new sessions.
+      let sessionRowsReady = false;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const expanded = await group.getAttribute("aria-expanded");
+        if (expanded === "false") await group.click();
+        sessionRowsReady = await treeRows.nth(1).waitFor({
+          state: "visible", timeout: 5000,
+        }).then(() => true, () => false);
+        if (sessionRowsReady) break;
       }
+      if (!sessionRowsReady) {
+        throw new Error("prior Session not listed after Workspace initialization");
+      }
+      report.sidebarExpansionVerified = true;
       report.sidebarRowsAfterExpand = await treeRows.count();
       const titled = treeRows.filter({
         hasText: /TRISYNORA mock title|TRISYNORA_SESSION_HISTORY_FIRST/,
@@ -176,7 +188,9 @@ async function main() {
           const row = treeRows.nth(index);
           if (!(await row.isVisible().catch(() => false))) continue;
           await row.click();
-          if (await priorResponse.isVisible().catch(() => false)) break;
+          if (await priorResponse.waitFor({
+            state: "visible", timeout: 3500,
+          }).then(() => true, () => false)) break;
         }
       }
     }
