@@ -26,5 +26,7 @@ jobs:
           ffmpeg -hide_banner -encoders | grep -q libx264
       - name: Run offline contracts and real MP4 decode tests
         run: python -m unittest discover -s tests -v
+      - name: G2 real-MP4 synthetic three-root bridge rehearsal
+        run: python tools/bridge_rehearsal.py
 # No write permissions, other repo checkouts, secrets or native products.
 # FFmpeg is installed in ephemeral CI only to test synthetic, isolated MP4.
