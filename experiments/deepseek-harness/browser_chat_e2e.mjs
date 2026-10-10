@@ -6,6 +6,8 @@ import { chromium } from "playwright";
 const MARKER = "TRISYNORA_BROWSER_MCP_DONE";
 const report = { ok: false, stage: "initial", authenticated: false, submitted: false };
 let browser;
+let observedPage;
+let pageErrors = 0;
 
 async function main() {
   if (!process.env.DSH_AUTH_URL || !process.env.TRISYNORA_BROWSER_WORKSPACE) {
@@ -17,6 +19,8 @@ async function main() {
     viewport: { width: 1280, height: 900 }, locale: "en-US",
   });
 
+  observedPage = page;
+  page.on("pageerror", () => { pageErrors++; });
   report.stage = "browser-authenticated-boot";
   await page.goto(process.env.DSH_AUTH_URL, { waitUntil: "load", timeout: 45000 });
   await page.locator("[data-composer-input]").first().waitFor({ timeout: 45000 });
@@ -65,9 +69,22 @@ async function main() {
 try {
   await main();
 } catch (error) {
-  // A stable stage string is sufficient for public CI; error objects may
-  // contain bearer URLs and must NEVER be echoed into GitHub Actions.
+  // Never echo page HTML, bearer URLs, credentials, or exception messages.
+  // Only fixed boolean checks and counts to diagnose a boot gate.
   report.ok = false;
+  if (observedPage) {
+    const body = await observedPage.locator("body").innerText().catch(() => "");
+    report.diagnostics = {
+      composerCount: await observedPage.locator("[data-composer-input]").count().catch(() => -1),
+      editableCount: await observedPage.locator('[data-composer-input][contenteditable="true"]').count().catch(() => -1),
+      chooseWorkspaceButton: await observedPage.getByRole("button", { name: "Choose workspace" }).count().catch(() => -1),
+      chooseWorkspaceTextbox: await observedPage.getByRole("textbox", { name: "Choose workspace" }).count().catch(() => -1),
+      dialogCount: await observedPage.getByRole("dialog").count().catch(() => -1),
+      rootInert: await observedPage.locator("#root").evaluate(el => el.inert).catch(() => null),
+      pageErrors,
+      uiKeywords: ["API Key", "key", "Welcome", "Settings", "Choose workspace", "Default workspace", "Unable to create", "Error", "Connect"].filter(x => body.includes(x)),
+    };
+  }
 } finally {
   if (browser) await browser.close().catch(() => {});
   process.stdout.write(JSON.stringify(report) + "\n");
