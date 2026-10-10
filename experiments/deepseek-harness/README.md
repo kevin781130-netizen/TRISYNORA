@@ -66,6 +66,26 @@ product-approved exporters, not another Agent or Harness Jobs controller.
   Publisher-side authentication and trusted status display remain separate,
   product-owner-approved follow-up work.
 
+## Tenth knife — independent Ed25519 publisher key verification
+
+A self-hash does **not** authenticate the source. The optional
+[signed_status_receipt.py](signed_status_receipt.py) now validates a
+domain-separated, Ed25519-signed v1 snapshot against a caller-supplied,
+**externally pinned** product+instance+key trust registry. The verifier
+checks revocation, key validity, old trust-registry epoch, source mismatch,
+tampered-but-rehashed data and issuer-scoped replay floor. Pinned
+`cryptography==46.0.4` supplies the well-reviewed Ed25519 primitive.
+See [SIGNED_STATUS_TRUST.md](SIGNED_STATUS_TRUST.md) and the separate
+[test_signed_status_receipt.py](test_signed_status_receipt.py) regression.
+
+**Only ephemeral keys from synthetic tests are verified.** There is no
+real Vera, H3 or PointFlux signer/approved registry, no native connection,
+no persistent replay-ledger commit and no new MCP tool. Consequently
+`usableAsAuthoritativeNativeStatus=false` even if the provided test
+signature is cryptographically valid. No key, credential or permission
+is issued to Harness. Separate product-owner-approved publisher and
+trust-distribution work is required before exposing any native status.
+
 ## The executable deliverable
 
 `readonly_mcp.py` is a **standalone Python-standard-library** stdio MCP server. Its *entire* callable surface is:
@@ -147,4 +167,4 @@ The CI tests run independent Python protocol/contract checks, genuine MCP SDK st
 - Native product standalone regressions and actual three-project isolation: **NOT VERIFIED**.
 - All seven constitutional PRs: untouched, unmerged, and remain review-blocked where documented.
 
-**Next separate authorization gate:** producer-owned signed export and independent trust anchors for the status-receipt format. Until signature/channel verification and actual product approvals pass, the current snapshots remain **untrusted and disconnected**; do not add an MCP status tool or Job mirror. Never delegate cancel/retry/apply/approve powers or native code mounts to Harness.
+**Next separate authorization gate:** product-owner provisioning of real publisher public keys, authenticated registry distribution/revocation and an externally durable, atomically updated replay floor. An Ed25519 signature from an **ephemeral test key is not proof of a deployed native product**. Do not expose these receipts through a new MCP tool, native Jobs mirror or any cancel/retry/apply authority before separately reviewed product integration.
