@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0  # full local ancestry for offline G3 review
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -28,5 +29,9 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: G2 real-MP4 synthetic three-root bridge rehearsal
         run: python tools/bridge_rehearsal.py
+      - name: G3 verify frozen six-PR ancestry and release blockers
+        run: python tools/g3_release_gate.py
+      - name: G4 verify exact seven-PR file scopes before human merge
+        run: python tools/g4_merge_review.py
 # No write permissions, other repo checkouts, secrets or native products.
 # FFmpeg is installed in ephemeral CI only to test synthetic, isolated MP4.

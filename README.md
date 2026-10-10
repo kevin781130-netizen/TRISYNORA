@@ -21,9 +21,16 @@ TRISYNORA is the **contract-first interoperability specification** for three ind
 5. [docs/ROADMAP.md](docs/ROADMAP.md) — planned delivery sequence, not a declaration of completed functionality.
 6. [docs/ADR-0001-contract-first.md](docs/ADR-0001-contract-first.md) — architectural decision record.
 
-## Phase 0 scope
+## Implemented contract and isolated tooling stages
 
-This repository contains **only documentation, neutral versioned exchange contracts, examples, and offline conformance tests**. It does **not** install or start Vera, MiniMax-H3, PointFlux, ComfyUI, browsers, GPU models, FFmpeg, or cloud providers.
+TRISYNORA contains neutral exchange contracts, fixtures, **optional local command-line tools**, Git-based isolation checks, and a CI-tested synthetic video exchange rehearsal. It is **not** a fourth Agent, Director, native video editor or shared product runtime. It never installs or starts the three native products as part of its tests.
+
+- **P0**: five versioned strict neutral JSON envelopes; synthetic conformance tests.
+- **P1**: local H3-origin video *copy* and SHA-256 exchange package; PointFlux read-only, fail-closed receiver assessment.
+- **Media gate**: optional FFprobe + FFmpeg verification and decode-to-null of real H.264 pilot MP4; success still **blocks** PointFlux native import.
+- **G1**: opt-in read-only Git HEAD/SHA-256 audit of indexed and explicitly watched native files. Not a universal untracked-state proof.
+- **G2**: complete H.264 exchange/decode/isolation rehearsal against **three disposable mock Git projects**, not real Vera/H3/PointFlux.
+- **G3/G4**: frozen historic CI/PR evidence, strict Git file-diff scope, and a manual-only merge-readiness checklist.
 
 The five new contract families are envelopes, **not replacements** for the products' native formats:
 
@@ -42,14 +49,29 @@ python -m pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 ```
 
-The tests are designed to work locally even when GitHub Actions cannot run. CI is advisory until a **real, recorded PASS** exists; an unexecuted workflow is not proof.
+The repository is public and its **read-only** GitHub Actions workflow has recorded successful offline contract and real MP4 tests. CI results only cover the exact tested commit; `green` does not mean native product import, production readiness, or owner-approved merge. GitHub Actions runs on each PR; tests can also run locally without any other product installed.
+
+The media rehearsal requires `ffmpeg` and `ffprobe` on PATH. A missing decoder is **NOT VERIFIED**, never a video PASS.
 
 ### Optional read-only preflight
 
 `tools/preflight_exchange.py` checks links between validated Asset, Shot, Job and Evidence manifests, and can optionally SHA-256-verify media bytes. It never submits jobs, opens another product's private data, or grants receiver authorization. Read [local acceptance and the preflight CLI examples](docs/LOCAL_ACCEPTANCE.md).
 
-## Non-goals (deliberate)
+## Current acceptance and merge guidance
 
-No shared database; no git submodules or vendored product engines; no implicit cross-repository imports; no always-running central broker; no fourth director UI; no automatic merges or writes to source projects; no unverified claims of three-project E2E video production.
+- [P1 packaging](docs/P1_H3_VIDEO_HANDOFF.md) · [Receiver preflight](docs/POINTFLUX_RECEIVER_ADAPTER_SPEC.md) · [Real MP4 media gate](docs/P1_REAL_MP4_GATE.md)
+- [G1 scoped SHA-256 audit](docs/G1_ISOLATION_AUDIT.md) · [G2 synthetic bridge rehearsal](docs/G2_BRIDGE_REHEARSAL.md)
+- [G3 freeze and product-release blockers](docs/G3_RELEASE_REVIEW.md) · [G4 seven-PR merge readiness review](docs/G4_MERGE_READINESS.md)
 
-**Status:** planning and contract foundation. No native product integration or production-grade cross-repository E2E is claimed by this repository.
+Offline acceptance commands (Git history required for G3/G4; install FFmpeg for video tests):
+
+```bash
+python -m unittest discover -s tests -v
+python tools/bridge_rehearsal.py
+python tools/g3_release_gate.py
+python tools/g4_merge_review.py
+```
+
+**Non-goals:** No shared database; no native code vendoring or submodules; no cross-repository writes; no always-running broker or fourth Director; no automatic merges or PR retargets.
+
+**Status:** contracts, real MP4 *synthetic-fixture* decoding, mock-three-product G2 rehearsal and pre-merge review are implemented and tested. **Native H3 export, PointFlux video import, Vera live orchestration and genuine three-product E2E are NOT VERIFIED.** The stacked PRs remain drafts pending human owner review. This Public repository has **no owner-approved distribution license yet**; do not presume MIT reuse or a production release.

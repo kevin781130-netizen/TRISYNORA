@@ -1,0 +1,115 @@
+{
+  "format": "trisynora.g4-premerge-scope/v1",
+  "repository": "kevin781130-netizen/TRISYNORA",
+  "policy": "zero-cross-project-contamination",
+  "evidenceType": "operator-reviewed-historic-github-diff-manifest-no-live-api-auth",
+  "draftStackLength": 7,
+  "historicP1toP6": [
+    {
+      "pr": 1,
+      "baseCommit": "efc93932357c21af9bd2fed42b1e646863343a03",
+      "headCommit": "206bb613ca259fc3f3e59df52a61d4c8a15ecbf4",
+      "expectedChanges": {
+        ".github/PULL_REQUEST_TEMPLATE.md": "A",
+        ".github/workflows/contract-tests.yml": "A",
+        "AGENTS.md": "A",
+        "CONSTITUTION.md": "A",
+        "README.md": "M",
+        "docs/ADR-0001-contract-first.md": "A",
+        "docs/ARCHITECTURE.md": "A",
+        "docs/COMPATIBILITY.md": "A",
+        "docs/LOCAL_ACCEPTANCE.md": "A",
+        "docs/OWNERSHIP.md": "A",
+        "docs/ROADMAP.md": "A",
+        "examples/README.md": "A",
+        "examples/v1/asset.json": "A",
+        "examples/v1/capability.json": "A",
+        "examples/v1/evidence.json": "A",
+        "examples/v1/job.json": "A",
+        "examples/v1/shot.json": "A",
+        "requirements-dev.txt": "A",
+        "schemas/v1/asset.schema.json": "A",
+        "schemas/v1/capability.schema.json": "A",
+        "schemas/v1/evidence.schema.json": "A",
+        "schemas/v1/job.schema.json": "A",
+        "schemas/v1/shot.schema.json": "A",
+        "scripts/test-local.ps1": "A",
+        "tests/test_contracts.py": "A",
+        "tests/test_preflight_exchange.py": "A",
+        "tests/test_repo_boundaries.py": "A",
+        "tests/test_verify_asset_package.py": "A",
+        "tools/preflight_exchange.py": "A",
+        "tools/verify_asset_package.py": "A"
+      }
+    },
+    {
+      "pr": 2,
+      "baseCommit": "206bb613ca259fc3f3e59df52a61d4c8a15ecbf4",
+      "headCommit": "3f2a9b94d1c9ca793d5a7ba0220813a3338df4ec",
+      "expectedChanges": {
+        "docs/P1_H3_VIDEO_HANDOFF.md": "A",
+        "tests/test_p1_video_handoff.py": "A",
+        "tools/p1_video_handoff.py": "A"
+      }
+    },
+    {
+      "pr": 3,
+      "baseCommit": "3f2a9b94d1c9ca793d5a7ba0220813a3338df4ec",
+      "headCommit": "f0032e17727047c53ed63f28f7b8f4a62e1bffa9",
+      "expectedChanges": {
+        "docs/POINTFLUX_RECEIVER_ADAPTER_SPEC.md": "A",
+        "tests/test_pointflux_receiver_dry_run.py": "A",
+        "tools/pointflux_receiver_dry_run.py": "A"
+      }
+    },
+    {
+      "pr": 4,
+      "baseCommit": "f0032e17727047c53ed63f28f7b8f4a62e1bffa9",
+      "headCommit": "1d6b81450adc8843c6c9e64a2672ee6ae84a1781",
+      "expectedChanges": {
+        ".github/workflows/contract-tests.yml": "M",
+        "docs/P1_REAL_MP4_GATE.md": "A",
+        "tests/test_pointflux_media_probe.py": "A",
+        "tools/pointflux_media_probe.py": "A"
+      }
+    },
+    {
+      "pr": 5,
+      "baseCommit": "1d6b81450adc8843c6c9e64a2672ee6ae84a1781",
+      "headCommit": "7081e78b843a9de7dcb52a5783dbea5e21bd826d",
+      "expectedChanges": {
+        "docs/G1_ISOLATION_AUDIT.md": "A",
+        "tests/test_isolation_audit.py": "A",
+        "tools/isolation_audit.py": "A"
+      }
+    },
+    {
+      "pr": 6,
+      "baseCommit": "7081e78b843a9de7dcb52a5783dbea5e21bd826d",
+      "headCommit": "237e12780e35a58963f315fa2cad17dce45eed28",
+      "expectedChanges": {
+        ".github/workflows/contract-tests.yml": "M",
+        "docs/G2_BRIDGE_REHEARSAL.md": "A",
+        "tests/test_bridge_rehearsal.py": "A",
+        "tools/bridge_rehearsal.py": "A"
+      }
+    }
+  ],
+  "parentP6Commit": "237e12780e35a58963f315fa2cad17dce45eed28",
+  "requiredCurrentPR7Changes": {
+    ".github/workflows/contract-tests.yml": "M",
+    "README.md": "M",
+    "docs/G3_RELEASE_REVIEW.md": "A",
+    "governance/g3-freeze.json": "A",
+    "tests/test_g3_release_gate.py": "A",
+    "tools/g3_release_gate.py": "A",
+    "docs/G4_MERGE_READINESS.md": "A",
+    "governance/g4-review-scope.json": "A",
+    "tests/test_g4_merge_review.py": "A",
+    "tools/g4_merge_review.py": "A"
+  },
+  "forbiddenNativeProductWrites": true,
+  "humanMergeApprovalRecorded": false,
+  "productionReleaseAllowed": false,
+  "liveGithubPrStatusVerifiedByThisFile": false
+}
