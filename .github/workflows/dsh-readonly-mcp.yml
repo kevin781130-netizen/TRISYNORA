@@ -17,7 +17,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install pinned Ed25519 signature verifier for isolated unit tests
-        run: python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4
       - name: Verify anchored Ed25519 status signatures and publisher revocation regressions
         run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_signed_status_receipt.py" -v
       - name: Fail closed on owner-of-truth, duplicate Jobs and native-control expansion
