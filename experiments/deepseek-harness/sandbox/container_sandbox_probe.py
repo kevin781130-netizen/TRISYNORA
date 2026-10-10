@@ -154,7 +154,25 @@ def main() -> int:
             name.rsplit("/", 1)[-1][:90]
             for name in missing_specifiers[:4]
         ]
+        native_lines = []
+        for line in (completed.stderr or "").splitlines():
+            if not any(w in line.lower() for w in (
+                "optional-package", "native binding", "no usable",
+                "glibc", "dlopen", "prebuilt", "node-addon",
+                "local-build", "missing", "cannot find module",
+            )):
+                continue
+            # Only mocked CI inputs exist in the sealed container. Still
+            # remove any absolute paths and credential-like token strings.
+            sanitized = re.sub(r"/\\S+", "<path>", line)
+            sanitized = re.sub(
+                r"(?i)(token|secret|api[_-]?key)\\S*",
+                "<redacted>", sanitized)
+            native_lines.append(sanitized.strip()[:180])
+            if len(native_lines) >= 14:
+                break
         command_probe.update({
+            "nativeAddonLoaderHints": native_lines,
             "missingModuleNames": missing_names,
             "exit": completed.returncode,
             "stdoutCharacters": len(completed.stdout or ""),
