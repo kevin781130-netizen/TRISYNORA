@@ -59,7 +59,7 @@ jobs:
 # No Vera, H3, or PointFlux worktree is mounted or contacted.
   pinned-harness-web:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,6 +119,10 @@ jobs:
           TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
           TRISYNORA_BROWSER_RESTART_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_host_restart_e2e.mjs
         run: python -B experiments/deepseek-harness/smoke_host_restart.py
+      - name: Isolate actual pinned Harness Agent in rootless-permission Docker and test host escape boundaries
+        env:
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+        run: python -B experiments/deepseek-harness/sandbox/smoke_docker_sandbox.py
 # Browser UI and MCP are tested against a disposable loopback-only mock model.
 # No real model API key or native Vera / MiniMax-H3 / PointFlux source checkout.
 
