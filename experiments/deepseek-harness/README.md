@@ -86,6 +86,36 @@ signature is cryptographically valid. No key, credential or permission
 is issued to Harness. Separate product-owner-approved publisher and
 trust-distribution work is required before exposing any native status.
 
+## Eleventh knife — root-signed publisher registry & isolated durable replay ledger
+
+[durable_publisher_trust.py](durable_publisher_trust.py) adds an **operator
+root Ed25519 signature** over the complete product publisher-key registry,
+separate from the publisher signature already checked in knife ten. The
+operator root **public key must be explicitly provisioned out-of-band**;
+this code never stores or generates root/publisher private keys.
+
+An isolated SQLite high-water ledger uses `BEGIN IMMEDIATE`,
+`synchronous=FULL`, and an atomic transaction for verified receipt
+acceptance. Its durable floor is keyed by **(product, instance)**, so rotating
+the signing key does not reset the issuer sequence. Signed trust registry
+epochs and hashes are also committed: old epochs, replaced same-epoch
+manifests and revoked keys are refused *after* the newer manifest is
+installed. The operator root fingerprint is pinned in the ledger, rejecting
+unapproved root substitution. The revocation update itself does **not**
+require receiving a new publisher receipt.
+
+See [DURABLE_PUBLISHER_TRUST.md](DURABLE_PUBLISHER_TRUST.md) and
+[test_durable_publisher_trust.py](test_durable_publisher_trust.py).
+The database must reside in a **separately controlled sandbox outside
+all Git worktrees**. SQLite persistence is not resistant to malicious
+disk rollback or sudden storage failure. Registry revocation cannot
+be known until the authenticated newer manifest is installed.
+
+**No real publisher keys, native products, new MCP tools or Jobs mirrors are
+connected.** Success always reports `nativeProductRuntimeVerified=false`
+and `usableAsAuthoritativeNativeStatus=false`. This is an isolated trust
+and replay mechanism test, not an authorized real-product status channel.
+
 ## The executable deliverable
 
 `readonly_mcp.py` is a **standalone Python-standard-library** stdio MCP server. Its *entire* callable surface is:
@@ -167,4 +197,4 @@ The CI tests run independent Python protocol/contract checks, genuine MCP SDK st
 - Native product standalone regressions and actual three-project isolation: **NOT VERIFIED**.
 - All seven constitutional PRs: untouched, unmerged, and remain review-blocked where documented.
 
-**Next separate authorization gate:** product-owner provisioning of real publisher public keys, authenticated registry distribution/revocation and an externally durable, atomically updated replay floor. An Ed25519 signature from an **ephemeral test key is not proof of a deployed native product**. Do not expose these receipts through a new MCP tool, native Jobs mirror or any cancel/retry/apply authority before separately reviewed product integration.
+**Next separate authorization gate:** separately reviewed, native product-owner-controlled public-key provisioning, trusted distribution and signer export integration. A root-signed *test* registry and isolated SQLite transaction do not attest a running native product or authorize a new status MCP tool. Keep default Harness Shell/FS/Process tools in a disposable OS sandbox, with all native repos/services/credentials unavailable. No external Jobs mirror, approval or cancel/retry/apply authority.
