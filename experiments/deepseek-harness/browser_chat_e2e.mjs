@@ -23,11 +23,19 @@ async function main() {
   report.authenticated = true;
 
   const input = page.locator('[data-composer-input][contenteditable="true"]').first();
+  report.stage = "browser-default-workspace-initialization";
+  // Shipped first-use Web prepares a default Workspace asynchronously.
+  // Do not mistake the initial read-only composer for absent Workspace.
+  await input.waitFor({ state: "visible", timeout: 20000 }).catch(() => {});
   if (!(await input.isVisible().catch(() => false))) {
-    report.stage = "browser-select-workspace";
-    await page.getByRole("textbox", { name: "Choose workspace" }).click();
+    report.stage = "browser-workspace-picker-trigger";
+    const choose = page.getByRole("textbox", { name: "Choose workspace" })
+      .or(page.getByRole("button", { name: "Choose workspace" })).first();
+    await choose.click({ timeout: 10000 });
+    report.stage = "browser-workspace-picker-dialog";
     const dialog = page.getByRole("dialog", { name: "Select Workspace Directory" });
     await dialog.waitFor({ timeout: 15000 });
+    report.stage = "browser-workspace-picker-path";
     await dialog.getByRole("button", { name: "Edit path" }).click();
     const pathField = dialog.getByRole("textbox", { name: "Edit path" });
     await pathField.fill(process.env.TRISYNORA_BROWSER_WORKSPACE);
