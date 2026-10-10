@@ -1,0 +1,21 @@
+{
+  "contract": "trisynora.evidence/v1",
+  "evidenceId": "Evidence001",
+  "origin": {
+    "product": "pointflux",
+    "projectId": "PFdemo",
+    "revision": "fixture-r1"
+  },
+  "subject": {
+    "jobId": "Task001",
+    "artifactSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "observation": {
+    "check": "visual-temporal-review",
+    "verdict": "inconclusive",
+    "executed": false,
+    "detail": "Synthetic fixture: no runtime execution, no verified PASS."
+  },
+  "authority": "domain-only",
+  "veraVerified": false
+}

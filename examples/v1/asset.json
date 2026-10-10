@@ -1,0 +1,20 @@
+{
+  "contract": "trisynora.asset/v1",
+  "artifactId": "asset_H3demo_001",
+  "origin": {
+    "product": "minimax-h3",
+    "projectId": "H3demo",
+    "revision": "fixture-r1"
+  },
+  "media": {
+    "kind": "video",
+    "mimeType": "video/mp4",
+    "sizeBytes": 1024,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "path": "assets/approved-take-001.mp4"
+  },
+  "publication": {
+    "mode": "approved-copy",
+    "requiresReceiverApproval": true
+  }
+}

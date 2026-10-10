@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:trisynora:asset:v1",
+  "title": "TRISYNORA asset envelope v1",
+  "description": "A hashed immutable asset inside a controlled exchange package; path is package-relative, not an OS path or URL.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "artifactId",
+    "origin",
+    "media",
+    "publication"
+  ],
+  "properties": {
+    "contract": {
+      "const": "trisynora.asset/v1"
+    },
+    "artifactId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product",
+        "projectId",
+        "revision"
+      ],
+      "properties": {
+        "product": {
+          "type": "string",
+          "enum": [
+            "vera",
+            "minimax-h3",
+            "pointflux"
+          ]
+        },
+        "projectId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        }
+      }
+    },
+    "media": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "mimeType",
+        "sizeBytes",
+        "sha256",
+        "path"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "image",
+            "video",
+            "audio",
+            "metadata",
+            "other"
+          ]
+        },
+        "mimeType": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 120
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 107374182400
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*(?:/[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*)*$"
+        }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "requiresReceiverApproval"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "reference-only",
+            "approved-copy"
+          ]
+        },
+        "requiresReceiverApproval": {
+          "const": true
+        }
+      }
+    }
+  }
+}

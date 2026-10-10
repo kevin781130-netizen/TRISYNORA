@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:trisynora:shot:v1",
+  "title": "TRISYNORA shot envelope v1",
+  "description": "Neutral shot reference. Native scene, AI prompt/take, camera, and timeline remain owner-defined.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "shotId",
+    "origin",
+    "native",
+    "timebase",
+    "assetIds",
+    "handoff"
+  ],
+  "properties": {
+    "contract": {
+      "const": "trisynora.shot/v1"
+    },
+    "shotId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product",
+        "projectId",
+        "revision"
+      ],
+      "properties": {
+        "product": {
+          "type": "string",
+          "enum": [
+            "vera",
+            "minimax-h3",
+            "pointflux"
+          ]
+        },
+        "projectId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        }
+      }
+    },
+    "native": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "sha256"
+      ],
+      "properties": {
+        "format": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "timebase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fpsNumerator",
+        "fpsDenominator",
+        "durationFrames"
+      ],
+      "properties": {
+        "fpsNumerator": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "fpsDenominator": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000
+        }
+      }
+    },
+    "assetIds": {
+      "type": "array",
+      "maxItems": 100,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "requiresExplicitBind"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "reference-only",
+            "approved-media"
+          ]
+        },
+        "requiresExplicitBind": {
+          "const": true
+        }
+      }
+    }
+  }
+}
