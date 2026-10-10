@@ -67,5 +67,9 @@ jobs:
         env:
           DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
         run: python -B experiments/deepseek-harness/smoke_harness_web.py
+      - name: Genuine DSH Headless Agent Loop invokes MCP using keyless local mock model
+        env:
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+        run: python -B experiments/deepseek-harness/smoke_agent_loop.py
 # Live model calls and in-browser click automation are intentionally NOT tested.
 
