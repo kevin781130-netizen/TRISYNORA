@@ -116,6 +116,29 @@ connected.** Success always reports `nativeProductRuntimeVerified=false`
 and `usableAsAuthoritativeNativeStatus=false`. This is an isolated trust
 and replay mechanism test, not an authorized real-product status channel.
 
+## Twelfth knife — real official Headless Harness inside Docker OS containment
+
+The optional [SANDBOX_OS_BOUNDARY.md](SANDBOX_OS_BOUNDARY.md) experiment
+stages only the published DSH runtime and tiny MCP test driver **outside
+all native Git worktrees**, builds a non-root Docker image from an empty
+context, and runs the real official DSH Headless Agent→MCP entirely inside
+`--network=none --read-only --cap-drop=ALL`, a bounded writable temporary
+filesystem and **two strictly read-only** binary/driver mounts. Synthetic
+host-only Vera/H3/PointFlux canaries are deliberately NOT mounted.
+
+It verifies Bash/FS/Process and network isolation with direct Linux-container
+probes, plus a genuine same-container DSH Agent/MCP exchange via keyless
+loopback mock. [sandbox/contract_gate.py](sandbox/contract_gate.py) and
+[test_dsh_sandbox_policy.py](test_dsh_sandbox_policy.py) reject privilege,
+network, mount and credential regressions **before** `docker run`.
+
+**Important:** The probes share DSH's container, but do **not** force-call
+every stock model-facing Bash/FS tool. Separate Web-browser tests still run
+outside this particular Docker container. This is Linux-container proof,
+not Windows, production kernel security, or a complete stock DSH sandbox
+audit. The full Harness built-in tool set still must not be exposed to
+native sources or real credentials without a separately reviewed OS boundary.
+
 ## The executable deliverable
 
 `readonly_mcp.py` is a **standalone Python-standard-library** stdio MCP server. Its *entire* callable surface is:
