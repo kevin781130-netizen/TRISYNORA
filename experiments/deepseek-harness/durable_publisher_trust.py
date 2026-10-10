@@ -99,7 +99,7 @@ def _isolated_db_path(filename: Path) -> Path:
     This is a configuration safety guard, NOT a race-safe malicious filesystem
     isolation primitive; filesystem and OS sandbox must be controlled outside.
     """
-    _require(type(filename) is Path and filename.is_absolute(),
+    _require(isinstance(filename, Path) and filename.is_absolute(),
              "external absolute replay ledger path required")
     _require(filename.name not in ("", ".", "..")
              and not filename.is_symlink(),
