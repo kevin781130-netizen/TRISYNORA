@@ -153,15 +153,32 @@ async function main() {
     if (!(await priorResponse.isVisible().catch(() => false))) {
       // New browser process may open at the blank workspace; choose the
       // existing session through the SHIPPED sidebar, never via private API.
-      const sessionByTitle = secondPage.getByRole("treeitem")
-        .filter({ hasText: /TRISYNORA mock title|TRISYNORA_SESSION_HISTORY_FIRST/ }).last();
-      if (!(await sessionByTitle.isVisible().catch(() => false))) {
-        const workspaceGroup = secondPage.getByRole("treeitem").first();
-        await workspaceGroup.waitFor({ timeout: 20000 });
-        await workspaceGroup.click();
+      const treeRows = secondPage.getByRole("treeitem");
+      const group = treeRows.first();
+      await group.waitFor({ state: "visible", timeout: 20000 });
+      // The sidebar may already be expanded. Blindly clicking its Workspace
+      // row would COLLAPSE the sessions and hide the original conversation.
+      if (await group.getAttribute("aria-expanded") === "false") {
+        await group.click();
       }
-      await sessionByTitle.waitFor({ state: "visible", timeout: 25000 });
-      await sessionByTitle.click();
+      report.sidebarRowsAfterExpand = await treeRows.count();
+      const titled = treeRows.filter({
+        hasText: /TRISYNORA mock title|TRISYNORA_SESSION_HISTORY_FIRST/,
+      });
+      if (await titled.count()) {
+        await titled.last().click();
+      } else {
+        // This sandbox contains only one actual model-generated conversation.
+        // Check each official session row and require the genuine prior MCP
+        // response before declaring success; never create a replacement session.
+        const count = await treeRows.count();
+        for (let index = 1; index < Math.min(count, 8); index++) {
+          const row = treeRows.nth(index);
+          if (!(await row.isVisible().catch(() => false))) continue;
+          await row.click();
+          if (await priorResponse.isVisible().catch(() => false)) break;
+        }
+      }
     }
     await priorResponse.waitFor({ state: "visible", timeout: 30000 });
     const oldText = await priorResponse.innerText();
@@ -208,6 +225,15 @@ try {
       chooseWorkspaceButton: await observedPage.getByRole("button", { name: "Choose workspace" }).count().catch(() => -1),
       chooseWorkspaceTextbox: await observedPage.getByRole("textbox", { name: "Choose workspace" }).count().catch(() => -1),
       dialogCount: await observedPage.getByRole("dialog").count().catch(() => -1),
+      treeItemCount: await observedPage.getByRole("treeitem").count().catch(() => -1),
+      firstTreeItemExpanded: await observedPage.getByRole("treeitem").first()
+        .getAttribute("aria-expanded").catch(() => null),
+      matchingSessionRows: await observedPage.getByRole("treeitem").filter({
+        hasText: /TRISYNORA mock title|TRISYNORA_SESSION_HISTORY_FIRST/,
+      }).count().catch(() => -1),
+      priorChatResultVisible: await observedPage.locator(
+        '[data-chat-flow-kind="assistant-step"]').filter({ hasText: MARKER })
+        .count().catch(() => -1),
       rootInert: await observedPage.locator("#root").evaluate(el => el.inert).catch(() => null),
       pageErrors,
       uiKeywords: ["API Key", "key", "Welcome", "Settings", "Choose workspace", "Default workspace", "Unable to create", "Error", "Connect"].filter(x => body.includes(x)),
