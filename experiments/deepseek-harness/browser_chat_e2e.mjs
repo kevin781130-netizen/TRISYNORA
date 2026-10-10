@@ -4,6 +4,8 @@
 import { chromium } from "playwright";
 
 const MARKER = "TRISYNORA_BROWSER_MCP_DONE";
+const FIRST_PROMPT = "Use the TRISYNORA read-only capability list tool once. Report its catalog status. TRISYNORA_SESSION_HISTORY_FIRST";
+const FOLLOWUP_PROMPT = "Continue this SAME earlier conversation, keeping its MCP catalog context. TRISYNORA_SESSION_HISTORY_SECOND";
 const report = { ok: false, stage: "initial", authenticated: false, submitted: false };
 let browser;
 let observedPage;
@@ -90,7 +92,12 @@ async function main() {
 
   report.stage = "browser-compose";
   await input.waitFor({ state: "visible", timeout: 30000 });
-  await input.fill("Use the TRISYNORA read-only capability list tool once. Report its catalog status.");
+  const resume = process.env.TRISYNORA_SESSION_RESUME_EXPECT === "1";
+  if (resume && targetModel !== "deepseek-v4-pro") {
+    throw new Error("session recovery requires verified model selection");
+  }
+  await input.fill(resume ? FIRST_PROMPT :
+    "Use the TRISYNORA read-only capability list tool once. Report its catalog status.");
   await page.getByRole("button", { name: "Send message", exact: true }).click();
   report.submitted = true;
 
@@ -102,6 +109,86 @@ async function main() {
   if (!rendered.includes("catalog-only") ||
       !rendered.includes("nativeWriteToolsExposed=false")) {
     throw new Error("model did not display validated read-only catalog");
+  }
+  if (resume) {
+    report.stage = "browser-terminated-for-resume";
+    // Completely exit Chromium: no browser process, profile, cookie, local
+    // storage or in-memory React state survives. The isolated Harness Host
+    // stays alive and owns the authoritative session log.
+    await browser.close();
+    browser = undefined;
+    report.browserProcessExited = true;
+
+    report.stage = "browser-independent-reconnect";
+    browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+    const secondPage = await browser.newPage({
+      viewport: { width: 1280, height: 900 }, locale: "en-US",
+    });
+    observedPage = secondPage;
+    secondPage.on("pageerror", () => { pageErrors++; });
+    await secondPage.goto(process.env.DSH_AUTH_URL, {
+      waitUntil: "load", timeout: 45000,
+    });
+    await secondPage.locator("[data-composer-input]").first()
+      .waitFor({ timeout: 45000 });
+    const continueWelcome = secondPage.getByRole("dialog")
+      .getByRole("button", { name: /^(继续|Continue)$/ });
+    const modalDeadline = Date.now() + 30000;
+    while (Date.now() < modalDeadline) {
+      if (await continueWelcome.isVisible().catch(() => false)) {
+        await continueWelcome.click();
+        await continueWelcome.waitFor({ state: "hidden", timeout: 15000 });
+      }
+      if (!(await secondPage.locator("#root")
+        .evaluate(el => el.inert).catch(() => true))) break;
+      await secondPage.waitForTimeout(250);
+    }
+    if (await secondPage.locator("#root").evaluate(el => el.inert).catch(() => true)) {
+      throw new Error("reopened browser remained blocked");
+    }
+
+    report.stage = "browser-resumed-session-history";
+    const priorResponse = secondPage.locator('[data-chat-flow-kind="assistant-step"]')
+      .filter({ hasText: MARKER }).last();
+    if (!(await priorResponse.isVisible().catch(() => false))) {
+      // New browser process may open at the blank workspace; choose the
+      // existing session through the SHIPPED sidebar, never via private API.
+      const sessionByTitle = secondPage.getByRole("treeitem")
+        .filter({ hasText: /TRISYNORA mock title|TRISYNORA_SESSION_HISTORY_FIRST/ }).last();
+      if (!(await sessionByTitle.isVisible().catch(() => false))) {
+        const workspaceGroup = secondPage.getByRole("treeitem").first();
+        await workspaceGroup.waitFor({ timeout: 20000 });
+        await workspaceGroup.click();
+      }
+      await sessionByTitle.waitFor({ state: "visible", timeout: 25000 });
+      await sessionByTitle.click();
+    }
+    await priorResponse.waitFor({ state: "visible", timeout: 30000 });
+    const oldText = await priorResponse.innerText();
+    if (!oldText.includes("catalog-only") ||
+        !oldText.includes("nativeWriteToolsExposed=false")) {
+      throw new Error("historic MCP result was not restored correctly");
+    }
+    await secondPage.getByText(FIRST_PROMPT, { exact: true })
+      .waitFor({ state: "visible", timeout: 20000 });
+    report.historyRestoredInFreshBrowser = true;
+
+    report.stage = "browser-continued-old-session";
+    const previousResponseCount = await secondPage.locator(
+      '[data-chat-flow-kind="assistant-step"]').filter({ hasText: MARKER }).count();
+    const resumedComposer = secondPage.locator(
+      '[data-composer-input][contenteditable="true"]').first();
+    await resumedComposer.waitFor({ state: "visible", timeout: 20000 });
+    await resumedComposer.fill(FOLLOWUP_PROMPT);
+    await secondPage.getByRole("button", {
+      name: "Send message", exact: true,
+    }).click();
+    report.continuationSubmitted = true;
+    const responses = secondPage.locator('[data-chat-flow-kind="assistant-step"]')
+      .filter({ hasText: MARKER });
+    await responses.nth(previousResponseCount)
+      .waitFor({ state: "visible", timeout: 75000 });
+    report.continuationRendered = true;
   }
   report.ok = true;
   report.stage = "complete";
