@@ -161,6 +161,7 @@ def run() -> dict:
             "PYTHONDONTWRITEBYTECODE": "1",
             "CI": "true",
             "LANG": "C.UTF-8",
+            "PLAYWRIGHT_BROWSERS_PATH": os.environ.get("PLAYWRIGHT_BROWSERS_PATH", ""),
         }
         log = root / "private-web.log"
         try:
