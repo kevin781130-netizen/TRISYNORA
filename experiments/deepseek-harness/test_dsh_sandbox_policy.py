@@ -25,7 +25,6 @@ class DockerSandboxBoundaryContractTests(unittest.TestCase):
             "--pids-limit=96", "--memory=1024m", "--cpus=1.5",
             "--user=10001:10001",
             "--tmpfs=/tmp:rw,nosuid,nodev,mode=1777,size=256m",
-            "--mount", f"type=bind,src={self.runtime},dst=/opt/dsh,readonly",
             "--mount", f"type=bind,src={self.stage},dst=/opt/trisynora,readonly",
             "--env=DSH_CLI=/opt/dsh/node_modules/.bin/dsh",
             "--env=RUNNER_TEMP=/tmp",
@@ -73,11 +72,11 @@ class DockerSandboxBoundaryContractTests(unittest.TestCase):
             "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
         ] + self.args[5:])
 
-    def test_writable_runtime_mount_denied(self):
-        self.denied([
-            x.replace("/opt/dsh,readonly", "/opt/dsh")
-            for x in self.args
-        ])
+    def test_host_runtime_mount_denied_even_when_readonly(self):
+        self.denied(self.args[:5] + [
+            "--mount",
+            f"type=bind,src={self.runtime},dst=/opt/dsh,readonly",
+        ] + self.args[5:])
 
     def test_writable_source_mount_denied(self):
         self.denied([
