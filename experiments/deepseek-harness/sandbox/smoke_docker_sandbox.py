@@ -46,8 +46,9 @@ def main() -> int:
     dsh_link = Path(dsh)
     if not dsh_link.is_file():
         raise RuntimeError("DSH CLI missing")
-    # Existing pinned package root is in runner temp. Never mount /home/runner
-    # or the complete runner directory.
+    # The host pinned DSH validates the version already used in other
+    # tests. Docker builds the SAME pinned npm version inside its image;
+    # the host npm directory is NEVER mounted into the container.
     runtime = dsh_link.parent.parent.parent
     if not (runtime / "node_modules" / ".bin" / "dsh").is_file():
         raise RuntimeError("expected isolated DSH npm runtime missing")
@@ -107,7 +108,6 @@ def main() -> int:
                 "--cpus=1.5",
                 "--user=10001:10001",
                 "--tmpfs=/tmp:rw,nosuid,nodev,mode=1777,size=256m",
-                "--mount", f"type=bind,src={runtime},dst=/opt/dsh,readonly",
                 "--mount", f"type=bind,src={stage},dst=/opt/trisynora,readonly",
                 "--env=DSH_CLI=/opt/dsh/node_modules/.bin/dsh",
                 "--env=RUNNER_TEMP=/tmp",
@@ -159,6 +159,8 @@ def main() -> int:
             "dockerNoNewPrivileges": True,
             "dockerNonRootUid": True,
             "dockerOnlyStagedPluginsMountedReadOnly": True,
+            "dshNpmInstalledInsideImmutableImage": True,
+            "runnerNpmRuntimeMounted": False,
             "officialHeadlessAgentMcpInContainer":
                 proof.get("officialDshMcpSuccess") is True,
             "boundaryChecks": proof.get("checks", {}),
