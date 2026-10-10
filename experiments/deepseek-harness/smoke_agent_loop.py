@@ -99,8 +99,10 @@ class Handler(BaseHTTPRequestHandler):
 def _tool_result_received(requests: list[dict]) -> bool:
     if len(requests) < 2:
         return False
-    second = requests[1]
-    # The real Messages format may use structured role=tool or user tool_result.
+    # A real DSH Agent Loop may first request a title or runtime summary,
+    # so the MCP tool result can appear in ANY later provider request.
+    # Require a tool_result block AND our exact tool name AND the validated
+    # payload; never count a mere tool description as successful execution.
     def crawl(node):
         if isinstance(node, dict):
             if node.get("status") == "catalog-only" and node.get("nativeWriteToolsExposed") is False:
@@ -111,7 +113,12 @@ def _tool_result_received(requests: list[dict]) -> bool:
         if isinstance(node, str) and "catalog-only" in node and "nativeWriteToolsExposed" in node:
             return True
         return False
-    return crawl(second.get("messages", []))
+    return any(
+        "tool_result" in json.dumps(req.get("messages", []))
+        and TARGET_TOOL in json.dumps(req.get("messages", []))
+        and crawl(req.get("messages", []))
+        for req in requests[1:]
+    )
 
 
 def run() -> dict:
@@ -180,7 +187,7 @@ def run() -> dict:
                 ],
                 "modelRequestedMcpTool": bool(Handler.requests) and
                     TARGET_TOOL in json.dumps(Handler.requests[0].get("tools", [])),
-                "toolResultObservedInSecondModelRequest": _tool_result_received(Handler.requests),
+                "toolResultObservedInLaterModelRequest": _tool_result_received(Handler.requests),
                 "mockProviderError": Handler.error,
                 "nativeProductsConnected": False,
                 "nativeWriteAuthorized": False,
