@@ -43,6 +43,29 @@ disable the upstream DSH stock Shell/FS/Process tools. Running the DSH
 Web profile still requires a disposable sandbox with no native source
 mounts or credentials. The three native products remain NOT CONNECTED.
 
+## Ninth knife — product-owned read-only status receipt contract (not connected)
+
+Vera retains verification Run/approval authority; H3 owns Director/Take
+execution; PointFlux owns its deterministic render/optimization. We have
+added a **separate, bounded, read-only *snapshot format*** for their future
+product-approved exporters, not another Agent or Harness Jobs controller.
+
+- [STATUS_RECEIPT_CONTRACT.md](STATUS_RECEIPT_CONTRACT.md) defines the exact
+  v1 subject mapping, constrained progress/outcome, expiration, SHA-256,
+  strict JSON and source-provenance requirements.
+- [status_receipt.py](status_receipt.py) is a pure Python, standard-library
+  validator. It does **no network, disk or native product I/O**. Results
+  always state `producerAuthenticityVerified=false` and
+  `usableAsAuthoritativeNativeStatus=false`: a self-contained SHA-256
+  digest cannot authenticate the asserted product author.
+- [test_status_receipt.py](test_status_receipt.py) exercises all three
+  fake producer formats and rejects malformed, stale, replayed, tampered,
+  overprivileged or mismatched input.
+- This does **not** add a fourth MCP tool, a real producer connector,
+  signing credentials, a Jobs mirror or any native workflow changes.
+  Publisher-side authentication and trusted status display remain separate,
+  product-owner-approved follow-up work.
+
 ## The executable deliverable
 
 `readonly_mcp.py` is a **standalone Python-standard-library** stdio MCP server. Its *entire* callable surface is:
@@ -124,4 +147,4 @@ The CI tests run independent Python protocol/contract checks, genuine MCP SDK st
 - Native product standalone regressions and actual three-project isolation: **NOT VERIFIED**.
 - All seven constitutional PRs: untouched, unmerged, and remain review-blocked where documented.
 
-**Next separate authorization gate:** only a separately reviewed, product-owned, *read-only* status receipt may be considered. Do not mirror Vera/H3/PointFlux native tasks into Harness Jobs or delegate cancel/retry/apply/approve powers. Do not mount native repositories or credentials into stock Harness; keep its own Jobs strictly internal. This optional front end must never become a shared Agent or mutable database.
+**Next separate authorization gate:** producer-owned signed export and independent trust anchors for the status-receipt format. Until signature/channel verification and actual product approvals pass, the current snapshots remain **untrusted and disconnected**; do not add an MCP status tool or Job mirror. Never delegate cancel/retry/apply/approve powers or native code mounts to Harness.
