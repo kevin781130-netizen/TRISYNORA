@@ -1,0 +1,117 @@
+{
+  "format": "trisynora.g3-foundation-freeze/v1",
+  "policy": "zero-cross-project-contamination",
+  "scope": "TRISYNORA-only metadata, neutral schemas, offline contracts, isolated media and synthetic acceptance tests",
+  "recordedDate": "2026-10-11",
+  "sourceOfEvidence": "verified GitHub Actions records captured during six PR acceptance reviews; static historic facts, not a live check",
+  "repository": "kevin781130-netizen/TRISYNORA",
+  "upstreamNativeProducts": [
+    "vera",
+    "minimax-h3",
+    "pointflux"
+  ],
+  "reviewOrder": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "pullRequests": [
+    {
+      "number": 1,
+      "branch": "docs/constitution-v1",
+      "baseBranch": "main",
+      "headCommit": "206bb613ca259fc3f3e59df52a61d4c8a15ecbf4",
+      "githubActionsRun": 38073272428,
+      "historicReportedConclusion": "success",
+      "historicRecordedTests": 36
+    },
+    {
+      "number": 2,
+      "branch": "feat/p1-h3-video-handoff-dryrun",
+      "baseBranch": "docs/constitution-v1",
+      "headCommit": "3f2a9b94d1c9ca793d5a7ba0220813a3338df4ec",
+      "githubActionsRun": 38074674979,
+      "historicReportedConclusion": "success",
+      "historicRecordedTests": 49
+    },
+    {
+      "number": 3,
+      "branch": "feat/p1-pointflux-receiver-contract",
+      "baseBranch": "feat/p1-h3-video-handoff-dryrun",
+      "headCommit": "f0032e17727047c53ed63f28f7b8f4a62e1bffa9",
+      "githubActionsRun": 38075126979,
+      "historicReportedConclusion": "success",
+      "historicRecordedTests": 63
+    },
+    {
+      "number": 4,
+      "branch": "feat/p1-real-mp4-probe-gate",
+      "baseBranch": "feat/p1-pointflux-receiver-contract",
+      "headCommit": "1d6b81450adc8843c6c9e64a2672ee6ae84a1781",
+      "githubActionsRun": 38075572803,
+      "historicReportedConclusion": "success",
+      "historicRecordedTests": 78
+    },
+    {
+      "number": 5,
+      "branch": "feat/p1-g1-isolation-audit",
+      "baseBranch": "feat/p1-real-mp4-probe-gate",
+      "headCommit": "7081e78b843a9de7dcb52a5783dbea5e21bd826d",
+      "githubActionsRun": 38076237057,
+      "historicReportedConclusion": "success",
+      "historicRecordedTests": 100
+    },
+    {
+      "number": 6,
+      "branch": "feat/p1-g2-bridge-rehearsal",
+      "baseBranch": "feat/p1-g1-isolation-audit",
+      "headCommit": "237e12780e35a58963f315fa2cad17dce45eed28",
+      "githubActionsRun": 38076608118,
+      "historicReportedConclusion": "success",
+      "historicRecordedTests": 113
+    }
+  ],
+  "contractFamilies": [
+    "asset",
+    "capability",
+    "evidence",
+    "job",
+    "shot"
+  ],
+  "mediaPilot": {
+    "container": "mp4",
+    "videoCodec": "h264",
+    "pixelFormat": "yuv420p",
+    "maxSeconds": 60,
+    "maxBytes": 134217728,
+    "maxWidth": 1920,
+    "maxHeight": 1080,
+    "audioSupported": false
+  },
+  "claimedPassedScope": [
+    "five neutral v1 contract schemas and synthetic fixtures",
+    "isolated H3-origin artifact copy and SHA checks",
+    "PointFlux read-only receiver dry-run: never import",
+    "FFprobe and FFmpeg true H.264 synthetic video decode",
+    "three synthetic Git repositories' indexed and watched file integrity",
+    "G2 synthetic bridge rehearsal, 113 tests 0 skipped"
+  ],
+  "unverifiedMandatoryGates": [
+    "actual H3 Director export and approval",
+    "actual PointFlux video-layer native import/render and receiver authorization",
+    "actual Vera orchestration and independent final verdict",
+    "native source repo before-after SHA tests",
+    "standalone three-product regressions with bridge disabled",
+    "real cross-product video, GPU/browser/ComfyUI performance/quality",
+    "review and selection of open-source distribution license",
+    "human constitutional acceptance of each stacked PR"
+  ],
+  "nativeRuntimeIntegrated": false,
+  "realCrossProductE2EVerified": false,
+  "ownerApprovedMerge": false,
+  "publicationLicenseFinalized": false,
+  "productionReleaseAllowed": false
+}
