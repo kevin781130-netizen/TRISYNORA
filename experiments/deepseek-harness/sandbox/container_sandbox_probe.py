@@ -144,7 +144,18 @@ def main() -> int:
             "Cannot find module", "unknown option", "not found",
             "fetch failed", "Error:", "error:",
         )
+        missing_specifiers = re.findall(
+            r"""Cannot find (?:module|package) ['"]([^'"]+)['"]""",
+            text_value,
+        )
+        # Module identifiers only. Directory prefixes and other stderr
+        # content must NOT be emitted even on a failed CI.
+        missing_names = [
+            name.rsplit("/", 1)[-1][:90]
+            for name in missing_specifiers[:4]
+        ]
         command_probe.update({
+            "missingModuleNames": missing_names,
             "exit": completed.returncode,
             "stdoutCharacters": len(completed.stdout or ""),
             "stderrCharacters": len(completed.stderr or ""),
