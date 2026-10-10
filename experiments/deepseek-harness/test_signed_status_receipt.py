@@ -26,7 +26,9 @@ def load(fname, name):
     return module
 
 
-s = load("status_receipt.py", "original_status_contract")
+# Import the same module instance used by the verifier, so exception
+# classes are identical rather than recreated under an importlib alias.
+import status_receipt as s
 v = load("signed_status_receipt.py", "trusted_ed25519_receipt")
 NOW = datetime(2026, 10, 11, 6, 0, 0, tzinfo=timezone.utc)
 
