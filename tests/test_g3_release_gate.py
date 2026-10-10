@@ -77,7 +77,7 @@ class G3FreezeGateTests(unittest.TestCase):
     def test_wrong_native_product_count_and_order_rejected(self):
         lock = copy.deepcopy(self.lock)
         lock["upstreamNativeProducts"] = ["pointflux", "vera", "minimax-h3"]
-        with self.assertRaisesRegex(FreezeGateError, "product owner"):
+        with self.assertRaisesRegex(FreezeGateError, "project owner"):
             validate_lock(lock)
 
     def test_incomplete_or_reordered_review_stack_rejected(self):
