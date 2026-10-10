@@ -16,6 +16,8 @@ import subprocess
 import sys
 import tempfile
 
+from contract_gate import validate_docker_invocation
+
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE.parent
 STAGED = (
@@ -116,6 +118,7 @@ def main() -> int:
                 IMAGE,
                 "python3", "/opt/trisynora/container_sandbox_probe.py",
             ]
+            validate_docker_invocation(args, runtime=runtime, stage=stage)
             try:
                 check = _run(args, timeout=185)
                 lines = [line.strip() for line in check.stdout.splitlines()
