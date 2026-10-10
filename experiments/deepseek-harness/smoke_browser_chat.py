@@ -190,6 +190,7 @@ def run() -> dict:
                     browser_env.update({
                         "DSH_AUTH_URL": url,
                         "TRISYNORA_BROWSER_WORKSPACE": str(root / "work"),
+                        "TRISYNORA_MODEL_SWITCH_EXPECT": expected_model,
                     })
                     try:
                         browser = subprocess.run(
