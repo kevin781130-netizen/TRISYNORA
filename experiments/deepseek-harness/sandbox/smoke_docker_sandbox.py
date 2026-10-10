@@ -114,7 +114,7 @@ def main() -> int:
                 "--env=DSH_TELEMETRY_DISABLED=1",
                 "--env=PYTHONDONTWRITEBYTECODE=1",
                 f"--env=TRISYNORA_HOST_TEST_PORT={host_port}",
-                "--workdir=/tmp",
+                "--workdir", "/tmp",
                 IMAGE,
                 "python3", "/opt/trisynora/container_sandbox_probe.py",
             ]
