@@ -119,11 +119,12 @@ and replay mechanism test, not an authorized real-product status channel.
 ## Twelfth knife — real official Headless Harness inside Docker OS containment
 
 The optional [SANDBOX_OS_BOUNDARY.md](SANDBOX_OS_BOUNDARY.md) experiment
-stages only the published DSH runtime and tiny MCP test driver **outside
-all native Git worktrees**, builds a non-root Docker image from an empty
-context, and runs the real official DSH Headless Agent→MCP entirely inside
-`--network=none --read-only --cap-drop=ALL`, a bounded writable temporary
-filesystem and **two strictly read-only** binary/driver mounts. Synthetic
+installs the pinned official DSH npm package directly into a non-root
+Docker image from an empty build context (so native Node addons are chosen
+for the container platform), and stages only the minimal MCP test driver
+outside native Git worktrees. The real official Headless Agent→MCP runs
+inside `--network=none --read-only --cap-drop=ALL`, a bounded writable
+temporary filesystem and **one strictly read-only** bridge-driver mount. Synthetic
 host-only Vera/H3/PointFlux canaries are deliberately NOT mounted.
 
 It verifies Bash/FS/Process and network isolation with direct Linux-container
