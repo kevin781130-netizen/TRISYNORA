@@ -6,12 +6,12 @@
 
 | Actual DeepSeek module | Reuse strategy | Stage |
 | --- | --- | --- |
-| Web and conversation UI (`dsh-web-app`, `client/ui-chat`) | Run unmodified in a separate DSH installation | Configured, **not** end-to-end verified |
-| Provider-neutral LLM/model switching (`llm/*`) | Keep inside external DSH process, never embed into Vera | Configured, **not** end-to-end verified |
-| MCP client (`@deepseek-ai/dsh-mcp-client`) | External DSH connects to the tiny read-only MCP server in this folder | MCP protocol independently tested |
+| Web and conversation UI (`dsh-web-app`, `client/ui-chat`) | Run unmodified in a separate DSH installation | **VERIFIED** real Chromium chat → Agent → MCP → rendered response, keyless mock provider |
+| Provider-neutral LLM/model switching (`llm/*`) | Keep inside external DSH process, never embed into Vera | **VERIFIED** official Web picker selects `deepseek-v4-pro`, actual request wire confirms ID; third-party routes untested |
+| MCP client (`@deepseek-ai/dsh-mcp-client`) | External DSH connects to the tiny read-only MCP server in this folder | **VERIFIED** official DSH Agent Loop and Web Browser route via actual stdio MCP |
 | User approval UI (`client/ui-approval`) | Use only for UI presentation; **cannot authorize native writes** | Conceptual, native binding deliberately absent |
 | Background job panel (`client/ui-jobs`) | Reuse later for read-only product-owned status receipts | Not connected; no fake native jobs |
-| Cordis Agent Loop, Session persistence, workflow/subagents, bash/FS/process | **Do not transplant into TRISYNORA**; native project ownership remains separate | Forbidden native access |
+| Harness Session persistence & browser reconnect | Keep inside isolated DSH Host; reload historic MCP receipt through shipped Session sidebar | **VERIFIED** independent Chromium restart + old Session continuation, Host remains running |\n| Cordis Agent Loop, workflow/subagents, bash/FS/process | **Do not transplant into TRISYNORA**; native project ownership remains separate | Forbidden native access |
 
 DeepSeek Harness is MIT licensed, but its included packages and dependencies have separate notices. **This spike copies no third-party source code**, only provides an integration configuration for its published runtime. DeepSeek Harness is still an **experimental developer preview, not security-audited**. Treating its approval UI or read-only setting as sufficient security is unsafe.
 
@@ -78,7 +78,7 @@ The only authenticated native capability grants must be issued by **each actual 
 - DSH Web launcher: **`@deepseek-ai/dsh@0.2.0-rc.2`**, installed from npm in a clean GitHub Actions temporary directory; the independent test checks that the official `--dump-config` includes our MCP plugin and the launched Web profile actually answers HTTP. No model is invoked.
 - Real MCP Client: **`@modelcontextprotocol/client@2.2.0`**, exactly the dependency used by upstream `dsh-mcp-client` in the inspected source. It launches `readonly_mcp.py` with stdio, lists three tools, calls the declared capability lookup, checks an actual digest-locked synthetic exchange package, and proves tampered media and write requests are rejected.
 - **Actual DSH Agent Loop (headless):** a temporary loopback-only mock Messages provider asks for `mcp__trisynora__trisynora_list_capabilities` and receives the genuine MCP result. The CI verifier requires a later model request to contain the model-facing `tool_result`, exact MCP tool name, and `catalog-only` payload. No paid model key, outbound inference, or native product call. This is separate from the official Web startup check and will be credited only after the head's actual CI passes.
-- **Browser remains unverified:** Headless Agent Loop tool routing does not imply that a Web browser session successfully invoked the MCP tool. A browser-level authenticated session and actual user interaction need their own test.
+- **Browser verified:** the real Chromium UI opens an authenticated DSH Web session, sends through the shipped composer, invokes the actual MCP client and renders the real catalog-only receipt. Separate regression checks the official model picker changes the *actual wire model* to `deepseek-v4-pro`. A third check kills Chromium, reconnects with a fresh browser process, selects the old Session in the official sidebar, observes the original MCP transcript, and confirms the follow-up model request contains both historic user turn and MCP result. All three checks use a keyless local mock provider. The DSH Host is intentionally **not** restarted.
 - The contract is intended to be compatible with P1 envelope structure, with strict optional pilot limits. Source provenance is user-declared: **not native H3 signature/consent**.
 
 ## Developer and CI tests
@@ -87,16 +87,16 @@ The only authenticated native capability grants must be issued by **each actual 
 python3 -B -m unittest discover -s experiments/deepseek-harness -p 'test_*.py' -v
 ```
 
-The CI tests run the independent Python protocol/contract checks, a genuine upstream MCP Client SDK handshake, a pinned official DeepSeek Harness Web startup, and a separate **actual DSH Headless Agent Loop with an in-process scripted mock provider**. No native product, actual movie decoding, real model API provider or model key is used. Do not label headless routing as browser-session proof.
+The CI tests run independent Python protocol/contract checks, genuine MCP SDK stdio, official DSH Web startup, actual DSH Headless Agent Loop, and **three separate Playwright Chromium Web-session gates**: browser→MCP, browser model-picker→correct model ID→MCP, and full browser-process termination→old Session restoration→continued message with historic MCP context on the wire. No native product, actual movie decoding, external model API provider, or real model key is used. Browser reconnect is not a DSH Host restart.
 
 **Acceptance status (limited):**
 - MCP unit and direct stdio contract: **VERIFIED** after checking CI at the current head.
 - Official MCP Client SDK discovers and invokes tools: **VERIFIED** after checking CI at the current head.
 - Official DSH Web startup and patch inclusion: **VERIFIED** after checking CI at the current head.
 - Official DSH Headless Agent Loop → MCP real tool response → second/subsequent mock model request: **VERIFIED ONLY IF** the standalone headless gate passes on the exact current CI head.
-- Web browser Agent session invoking MCP: **NOT VERIFIED**. This is different from headless tool routing.
-- Real H3/PointFlux/Vera adapters, approvals, and video import: **NOT IMPLEMENTED**.
+- Web browser Agent session invoking MCP: **VERIFIED** with keyless scripted provider and real Chromium.
+- Official Web UI model switching: **VERIFIED** exact `deepseek-v4-pro` ID in actual local provider requests.\n- New Chromium browser process restores historical Session, prior MCP result and model selection, then continues old Session: **VERIFIED**. Full DSH Host restart, model-provider credentials and external API calls: **NOT VERIFIED**.\n- Real H3/PointFlux/Vera adapters, approvals, and video import: **NOT IMPLEMENTED**.
 - Native product standalone regressions and actual three-project isolation: **NOT VERIFIED**.
 - All seven constitutional PRs: untouched, unmerged, and remain review-blocked where documented.
 
-**Next separate authorization gate:** enable only product-owner-approved read-only status adapters and later test a DSH browser-session tool call without inheriting shell/process/file permissions. This optional front end must never become an implicit shared Agent or shared mutable DB.
+**Next separate authorization gate:** test shutdown/restart of the isolated DSH **Host** while preserving its own temp profile and Session store; separately consider product-owner-approved read-only status adapters. No native repos may be mounted into its default shell/process environment. This optional front end must never become an implicit shared Agent or shared mutable DB.
