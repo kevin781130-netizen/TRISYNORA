@@ -47,3 +47,28 @@ restarts. Run `python -m unittest discover -s tests -v` for the full suite.
 The hash chain detects uncoordinated modification of database rows, **not**
 forgery by a privileged database administrator. It is not a signature or trusted
 identity system. Store private evidence outside public repositories.
+
+
+## PointFlux temporal Judge → Evidence Ledger (read-only)
+
+Import **existing**, local PointFlux \`render-manifest.json\`, \`temporal-judgement.json\` and the associated MP4; the adapter **never calls PointFlux or any Agent**. Inputs must all be within the operator-approved evidence root, with the MP4 beside its render manifest.
+
+\`\`\`sh
+python -m trisynora.adapters.pointflux \
+  --evidence-root /trusted/pointflux-output \
+  --render-manifest render/render-manifest.json \
+  --judgement judge/temporal-judgement.json \
+  --artifact render/final.mp4 \
+  --tenant-id organization1 --project-id campaign1 \
+  --shot-id intro --project-name "Campaign 1" \
+  --intent "Logo reveal" \
+  --produced-at 2026-10-11T10:00:00Z \
+  --ledger /trusted/trisynora/evidence.sqlite
+\`\`\`
+
+The adapter imports one ProjectSpec, ShotSpec, ArtifactRecord and EvaluationRecord, checks actual local artifact/report bytes, checks the shared PointFlux scene SHA-256 and frame/FPS compatibility, and enforces the required acceptance criteria. A repeated identical import is idempotent. JSON Schema validation and SHA-256 checks **do not authenticate** the producer, make the MP4 playable, certify aesthetic quality, authorize model training, or grant release/human approval. \`--produced-at\` is an operator-supplied recording timestamp: keep it identical when replaying the same import. The importer rejects standalone single-frame \`judgement.json\`; only the temporal v1 format is supported in this cut.
+
+Tests (includes negative cases):
+\`\`\`sh
+python -m unittest discover -s tests -v
+\`\`\`
