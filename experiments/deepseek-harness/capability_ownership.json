@@ -1,0 +1,64 @@
+{
+  "schema": "trisynora.capability-ownership/v1",
+  "status": "experiment-only-no-native-connections",
+  "ownership": {
+    "vera": [
+      "agent-run-control",
+      "agent-run-history-and-progress",
+      "code-verification-and-repair",
+      "patch-apply-approval",
+      "code-model-routing",
+      "code-session-checkpoints"
+    ],
+    "minimax-h3": [
+      "director-and-storyboard-workflow",
+      "comfyui-workflow-control",
+      "video-generation-and-take-review",
+      "director-override-and-retake",
+      "h3-asset-export-approval"
+    ],
+    "pointflux": [
+      "scene-ir-and-patches",
+      "scene-validation-and-compilation",
+      "particle-and-motion-runtime",
+      "deterministic-render-and-composition",
+      "visual-judge-and-optimization",
+      "pointflux-import-approval"
+    ],
+    "deepseek-harness": [
+      "optional-external-chat-ui",
+      "harness-only-model-selection",
+      "harness-only-session-history",
+      "read-only-mcp-client",
+      "harness-internal-jobs-only"
+    ],
+    "trisynora": [
+      "declared-capability-catalog",
+      "not-connected-lookup",
+      "isolated-package-reference-inspection"
+    ]
+  },
+  "harnessToNative": {
+    "nativeJobMirror": false,
+    "nativeJobCancel": false,
+    "nativeJobSchedule": false,
+    "nativeCommandExecution": false,
+    "nativeWrite": false,
+    "nativeApprovalSubstitution": false,
+    "nativeCredentialsOrWorktreeMount": false,
+    "nativeRuntimeConnection": false
+  },
+  "bridge": {
+    "nativeProductsConnected": false,
+    "nativeWriteToolsExposed": false,
+    "productOwnedStatusAdapterConnected": false,
+    "packageImportAuthorized": false
+  },
+  "sources": {
+    "vera": "https://github.com/kevin781130-netizen/vera/blob/main/README.md",
+    "minimax-h3": "https://github.com/kevin781130-netizen/minimax-H3/blob/main/README.md",
+    "pointflux": "https://github.com/kevin781130-netizen/PointFlux/blob/main/README.md",
+    "harness-jobs": "https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/client/ui-jobs/README.md"
+  },
+  "validationScope": "TRISYNORA bridge policy and configured MCP surface only; no runtime audit of native repositories or of stock DSH built-in tools"
+}

@@ -1,0 +1,124 @@
+name: Optional DeepSeek Harness read-only MCP experiment
+on:
+  pull_request:
+  push:
+    branches: [experiment/deepseek-harness-readonly-mcp]
+permissions:
+  contents: read
+jobs:
+  mcp-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Ed25519 signature verifier for isolated unit tests
+        run: |
+          python -m pip install --disable-pip-version-check --only-binary=:all: cryptography==46.0.4
+      - name: Verify anchored Ed25519 status signatures and publisher revocation regressions
+        run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_signed_status_receipt.py" -v
+      - name: Atomic SQLite replay ledger and operator-root signed registry regression
+        run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_durable_publisher_trust.py" -v
+      - name: Fail closed on owner-of-truth, duplicate Jobs and native-control expansion
+        run: python -B experiments/deepseek-harness/ownership_gate.py
+      - name: Strict three-product untrusted status receipt contract and abuse regressions
+        run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_status_receipt.py" -v
+      - name: Standalone MCP protocol and non-contamination tests
+        run: python -B -m unittest discover -s experiments/deepseek-harness -p "test_*.py" -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned genuine MCP client SDK into disposable temp directory
+        run: |
+          mkdir -p "$RUNNER_TEMP/trisynora-mcp-sdk"
+          npm install --prefix "$RUNNER_TEMP/trisynora-mcp-sdk" --no-audit --no-fund --ignore-scripts @modelcontextprotocol/client@2.2.0
+          cp experiments/deepseek-harness/mcp_client_smoke.mjs "$RUNNER_TEMP/trisynora-mcp-sdk/smoke.mjs"
+      - name: Connect real MCP SDK using stdio and verify tool discovery
+        env:
+          PYTHON: python3
+          TRISYNORA_MCP_SCRIPT: ${{ github.workspace }}/experiments/deepseek-harness/readonly_mcp.py
+        run: node "$RUNNER_TEMP/trisynora-mcp-sdk/smoke.mjs"
+      - name: Ensure no product source or full Harness payload is vendored
+        shell: bash
+        run: |
+          test ! -e Vera
+          test ! -e minimax-H3
+          test ! -e PointFlux
+          test ! -e node_modules
+          test ! -e vendor
+          test ! -e .gitmodules
+          test ! -e LICENSE
+          test -f experiments/deepseek-harness/readonly_mcp.py
+          test -f experiments/deepseek-harness/dsh.patch.yml
+          test ! -e experiments/deepseek-harness/credentials.json
+          test ! -e experiments/deepseek-harness/token.env
+# No Vera, H3, or PointFlux worktree is mounted or contacted.
+  pinned-harness-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned official DSH into temporary CI runtime
+        run: |
+          mkdir -p "$RUNNER_TEMP/dsh-runtime"
+          npm install --prefix "$RUNNER_TEMP/dsh-runtime" --no-audit --no-fund --ignore-scripts @deepseek-ai/dsh@0.2.0-rc.2
+      - name: Assemble actual DSH Web profile and verify HTTP startup
+        env:
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+        run: python -B experiments/deepseek-harness/smoke_harness_web.py
+      - name: Genuine DSH Headless Agent Loop invokes MCP using keyless local mock model
+        env:
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+        run: python -B experiments/deepseek-harness/smoke_agent_loop.py
+      - name: Install pinned Playwright and isolated Chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/trisynora-browser-binaries
+        run: |
+          mkdir -p "$RUNNER_TEMP/trisynora-browser"
+          npm install --prefix "$RUNNER_TEMP/trisynora-browser" --no-audit --no-fund --ignore-scripts playwright@1.56.1
+          cp experiments/deepseek-harness/browser_chat_e2e.mjs "$RUNNER_TEMP/trisynora-browser/browser_chat_e2e.mjs"
+          cp experiments/deepseek-harness/browser_host_restart_e2e.mjs "$RUNNER_TEMP/trisynora-browser/browser_host_restart_e2e.mjs"
+          "$RUNNER_TEMP/trisynora-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Genuine browser chat invokes Agent MCP and renders real catalog
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/trisynora-browser-binaries
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+          TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
+        run: python -B experiments/deepseek-harness/smoke_browser_chat.py
+      - name: Switch model in actual Web UI and verify wire model plus MCP response
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/trisynora-browser-binaries
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+          TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
+          TRISYNORA_MODEL_SWITCH_EXPECT: deepseek-v4-pro
+        run: python -B experiments/deepseek-harness/smoke_browser_chat.py
+      - name: Reopen saved Session in new Chromium process and verify MCP model context
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/trisynora-browser-binaries
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+          TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
+          TRISYNORA_MODEL_SWITCH_EXPECT: deepseek-v4-pro
+          TRISYNORA_SESSION_RESUME_EXPECT: '1'
+        run: python -B experiments/deepseek-harness/smoke_browser_chat.py
+      - name: Cold-restart actual Harness Host and continue persisted MCP Session
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/trisynora-browser-binaries
+          DSH_CLI: ${{ runner.temp }}/dsh-runtime/node_modules/.bin/dsh
+          TRISYNORA_BROWSER_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_chat_e2e.mjs
+          TRISYNORA_BROWSER_RESTART_SCRIPT: ${{ runner.temp }}/trisynora-browser/browser_host_restart_e2e.mjs
+        run: python -B experiments/deepseek-harness/smoke_host_restart.py
+# Browser UI and MCP are tested against a disposable loopback-only mock model.
+# No real model API key or native Vera / MiniMax-H3 / PointFlux source checkout.
+

@@ -1,0 +1,21 @@
+# DeepSeek Harness (dsh) optional MCP plug-in patch — experiment only.
+# Apply in an isolated VM/container that has NO Vera/H3/PointFlux mounts.
+# Does not change dsh's stock shell/filesystem tools, so this patch ALONE
+# must NEVER be treated as a security boundary.
+# Replace the two absolute sample paths before running a dsh web profile.
+- insert:
+    - id: trisynora-readonly-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: trisynora
+        transport: stdio
+        command: python3
+        args: ['-B', '/opt/trisynora/readonly_mcp.py']
+        env:
+          TRISYNORA_EXCHANGE_ROOT: /exchange
+          PYTHONDONTWRITEBYTECODE: '1'
+        failOnStartupError: true
+        toolCallTimeoutMs: 15000
+        maxInstructionBytes: 1024
+        reconnect:
+          enabled: false
