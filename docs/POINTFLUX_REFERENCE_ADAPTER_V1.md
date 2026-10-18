@@ -30,7 +30,7 @@ After conversion, `trisynora.validator.validate_bundle` validates records agains
 - Integer 1–120 FPS, <=60 seconds per shot, 1–30 shots. A mixed-FPS or mixed-resolution project is rejected rather than silently assigning a wrong `ProjectSpec.delivery`.
 - Both `projectId` and `shotId` must be at least two characters; the TRISYNORA v1 record schema is stricter than the PointFlux ID pattern for one-character IDs. No automatic ID rewriting.
 - Only project-relative local scene paths, no symlinks, URL fetches, shell, model calls, browser, GPU, media decoding, or writes to source repositories.
-- Source hashes are byte-verified **against operator-supplied local files**. This does not prove the original author/system identity, camera equivalence, media existence, source license, artistic quality, or successful execution of any renderer.
+- Source hashes are byte-verified **against operator-supplied local files**. The adapter independently re-derives the **static Camera, output/FPS, timeline event frames, and source/target asset references** from those Scene IR bytes and rejects mismatches. This is not a replacement for PointFlux's native Scene IR schema/semantic validator, and it does not prove the producer's identity, H3/PF 3D coordinate equivalence, asset file existence, license, artistic quality, or successful rendering.
 - `rights.*` are always false; `producer` is `operator-import`; evidence is not signed. Explicit user H3 bindings and native review authority remain unchanged.
 - Repeating the identical exchange, tenant and timestamp makes deterministic record IDs. Changing the timestamp for an identical exchange is not a valid ledger replay; callers must preserve recording time.
 
@@ -40,6 +40,6 @@ After conversion, `trisynora.validator.validate_bundle` validates records agains
 python -m unittest discover -s tests -p 'test_pointflux_reference_adapter.py' -v
 ```
 
-The offline tests cover deterministic metadata mapping, real Scene IR SHA-256 bytes, rejection of forged digest, URI traversal, unauthorized handoff, unknown fields, nonfinite JSON, missing map, one-character IDs and mixed delivery. They do **not** validate an actual H3 browser session, ComfyUI, real AI frames or an end-to-end PointFlux-H3-PointFlux run.
+The **10 offline tests** cover deterministic metadata mapping, Scene IR SHA-256 byte integrity, rejecting tampered Camera/Timeline/output/asset projections, forged digest, traversal, unauthorized handoff, unknown fields, nonfinite JSON, missing maps, one-character IDs and mixed delivery. An isolated source-equivalent validation run with the available `jsonschema` library passed 10/10 tests; **the full repository's native test suite and real PointFlux CLI/H3 service integration have not been executed**. These tests do **not** validate an actual H3 browser session, ComfyUI, real AI frames or an end-to-end PointFlux-H3-PointFlux run.
 
 **Status:** draft branch only. Do not merge to `main`, deploy, auto-run GitHub Actions, or alter existing TRISYNORA constitutional PRs without owner review. Follow-up should use a separate product-owned PR and real local E2E after contract approval.
