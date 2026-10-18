@@ -152,6 +152,59 @@ def _shot(shot: Any) -> dict:
     return s
 
 
+
+def _check_native_projection(shot: dict, scene: dict) -> None:
+    """Match every advertised PF -> H3 field to independently hashed Scene IR.
+
+    PointFlux's v1.4 semantic validator preserves the original Scene object;
+    its exporter copies camera/output, maps events using JS Math.round, and
+    normalizes asset URIs by stripping one initial slash. This *does not*
+    independently reproduce the full PointFlux Scene IR semantic validator.
+    """
+    cam = scene.get("camera")
+    output = scene.get("output")
+    events = scene.get("timeline")
+    targets = scene.get("targets")
+    origin = scene.get("source")
+    _require(isinstance(cam, dict) and isinstance(output, dict) and
+             isinstance(events, list) and isinstance(targets, dict) and
+             isinstance(origin, dict), "native Scene IR lacks exported fields")
+    _require(shot["camera"] == {"position": cam.get("position"),
+                                  "target": cam.get("target"), "fovDegrees": cam.get("fov")},
+             "camera does not match source Scene IR")
+    _require(shot["fps"] == output.get("fps") and
+             shot["output"] == {"width": output.get("width"), "height": output.get("height")},
+             "output/FPS do not match source Scene IR")
+    expected = []
+    for i, event in enumerate(events):
+        _require(isinstance(event, dict) and isinstance(event.get("at"), (float, int)) and
+                 not isinstance(event.get("at"), bool), "invalid native event")
+        at = event["at"]
+        duration = event.get("duration", 0)
+        _require(type(duration) in (int, float) and math.isfinite(duration) and duration >= 0
+                 and math.isfinite(at) and at >= 0, "invalid native event timing")
+        expected.append({"eventId": event.get("id") or f"event-{i+1}",
+                         "kind": event.get("effect"),
+                         "atFrame": math.floor(at * shot["fps"] + 0.5),
+                         "durationFrames": math.floor(duration * shot["fps"] + 0.5)})
+    _require(shot["timeline"] == expected, "timeline does not match source Scene IR")
+    _require(shot["durationFrames"] >= max([shot["fps"]] +
+             [e["atFrame"] + e["durationFrames"] for e in expected]),
+             "source timeline exceeds shot duration")
+
+    def as_asset(asset, role):
+        _require(isinstance(asset, dict) and isinstance(asset.get("uri"), str),
+                 "invalid native asset")
+        uri = asset["uri"]
+        uri = uri[1:] if uri.startswith("/") else uri
+        _relpath(uri)
+        return {"role": role, "uri": uri,
+                **({"sha256": asset["sha256"]} if asset.get("sha256") else {})}
+
+    expected_assets = [as_asset(origin, "source")]
+    expected_assets.extend(as_asset(asset, "target") for asset in targets.values())
+    _require(shot["assets"] == expected_assets, "assets do not match source Scene IR")
+
 def build_records(exchange_raw: bytes, *, tenant_id: str, project_name: str,
                   produced_at: str, scene_root: Path, scene_paths: dict[str, str]) -> list[dict[str, Any]]:
     """Create only ProjectSpec/ShotSpec, not ArtifactRecord or EvaluationRecord."""
@@ -207,6 +260,7 @@ def build_records(exchange_raw: bytes, *, tenant_id: str, project_name: str,
                  "source Scene IR digest mismatch: " + shot["shotId"])
         scene = _read_json(raw)
         _require(isinstance(scene, dict) and scene.get("version") == "1.4", "unsupported native Scene IR")
+        _check_native_projection(shot, scene)
         rec = base("ShotSpec", f"shot_{i+1}", "pointflux", "shot/" + shot["shotId"],
                    shot["origin"]["sourceSha256"])
         rec.update(project_spec_record_id=project["record_id"], shot_id=shot["shotId"],
