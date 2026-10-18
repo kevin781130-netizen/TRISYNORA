@@ -14,8 +14,19 @@ class PointFluxReferenceTests(unittest.TestCase):
         self.temp = TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        scene = json.dumps({"version": "1.4", "camera": {"position": [0, 0, 1]}},
-                           separators=(",", ":")).encode()
+        scene = json.dumps({
+            "version": "1.4", "seed": 1, "particles": 500,
+            "source": {"id": "logo", "type": "image", "uri": "/assets/logo.png"},
+            "targets": {"heart": {"id": "heart", "type": "image",
+                                  "uri": "/assets/heart.png"}},
+            "timeline": [{"id": "morph_1", "effect": "morph", "at": 1.25,
+                          "duration": 2.5, "targetId": "heart"}],
+            "camera": {"id": "main", "type": "perspective",
+                       "position": [0, 0, 1], "target": [0, 0, 0], "fov": 45},
+            "output": {"width": 1920, "height": 1080, "fps": 24,
+                       "background": "#000000"},
+        }, separators=(",", ":")).encode()
+        self.scene_bytes = scene
         (self.root / "shot.pf.json").write_bytes(scene)
         self.scene_sha = hashlib.sha256(scene).hexdigest()
         self.shot = {"shotId": "shot_A", "name": "Light reveal",
@@ -25,7 +36,8 @@ class PointFluxReferenceTests(unittest.TestCase):
                      "output": {"width": 1920, "height": 1080},
                      "timeline": [{"eventId": "morph_1", "kind": "morph", "atFrame": 30,
                                    "durationFrames": 60}],
-                     "assets": [{"role": "source", "uri": "assets/logo.png"}],
+                     "assets": [{"role": "source", "uri": "assets/logo.png"},
+                                {"role": "target", "uri": "assets/heart.png"}],
                      "handoff": {"mode": "reference-only", "requiresExplicitBind": True}}
         self.exchange = {"format": "pointflux-h3-shot-exchange/v1",
                          "projectId": "project_A", "shots": [self.shot]}
@@ -49,9 +61,7 @@ class PointFluxReferenceTests(unittest.TestCase):
         self.assertEqual(a[0]["delivery"], {"width": 1920, "height": 1080,
                                             "fps_num": 24, "fps_den": 1})
         self.assertFalse(a[0]["rights"]["external_training_allowed"])
-        self.assertEqual((self.root / "shot.pf.json").read_bytes(),
-                         json.dumps({"version": "1.4", "camera": {"position": [0, 0, 1]}},
-                                    separators=(",", ":")).encode())
+        self.assertEqual((self.root / "shot.pf.json").read_bytes(), self.scene_bytes)
 
     def test_records_conform_to_published_v1_validator(self):
         from trisynora.validator import validate_bundle
@@ -81,6 +91,18 @@ class PointFluxReferenceTests(unittest.TestCase):
             lambda s: s["origin"].update({"engine": "h3"}),
             lambda s: s.update({"fps": 0}),
             lambda s: s["timeline"][0].update({"atFrame": 121}),
+        ):
+            bad = copy.deepcopy(self.exchange)
+            patch(bad["shots"][0])
+            with self.subTest(bad=bad), self.assertRaises(ReferenceError):
+                self.build(bad)
+
+    def test_forged_camera_timeline_output_or_asset_is_refused(self):
+        for patch in (
+            lambda s: s["camera"].update({"position": [1, 2, 3]}),
+            lambda s: s["timeline"][0].update({"atFrame": 31}),
+            lambda s: s["assets"][0].update({"uri": "assets/fake.png"}),
+            lambda s: s["output"].update({"width": 1280}),
         ):
             bad = copy.deepcopy(self.exchange)
             patch(bad["shots"][0])
