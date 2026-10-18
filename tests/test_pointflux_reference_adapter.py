@@ -53,6 +53,17 @@ class PointFluxReferenceTests(unittest.TestCase):
                          json.dumps({"version": "1.4", "camera": {"position": [0, 0, 1]}},
                                     separators=(",", ":")).encode())
 
+    def test_records_conform_to_published_v1_validator(self):
+        from trisynora.validator import validate_bundle
+        result = validate_bundle(self.build())
+        self.assertIsInstance(result, dict)
+
+    def test_parent_directory_filename_is_not_accepted(self):
+        bad = copy.deepcopy(self.exchange)
+        bad["shots"][0]["assets"][0]["uri"] = "assets/a..b.png"
+        with self.assertRaises(ReferenceError):
+            self.build(bad)
+
     def test_source_bytes_are_required_not_just_declared_digest(self):
         changed = copy.deepcopy(self.exchange)
         changed["shots"][0]["origin"]["sourceSha256"] = "0" * 64
