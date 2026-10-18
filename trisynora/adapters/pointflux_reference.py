@@ -66,7 +66,7 @@ def _number(value: Any, low: float, high: float, name: str) -> None:
 def _relpath(value: Any) -> PurePosixPath:
     _require(isinstance(value, str) and PATH.fullmatch(value) is not None, "unsafe relative asset/scene path")
     parts = value.split("/")
-    _require(not any(part in ("", ".", "..") for part in parts) and not value.startswith("/"),
+    _require(".." not in value and not any(part in ("", ".", "..") for part in parts) and not value.startswith("/"),
              "unsafe relative asset/scene path")
     return PurePosixPath(value)
 
